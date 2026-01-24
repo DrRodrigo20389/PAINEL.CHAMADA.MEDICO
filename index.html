@@ -3,88 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Dr. Rodrigo - Premium</title>
+    <title>Painel Dr. Rodrigo v3.0</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #1a365d; --accent: #2b6cb0; --bg: #f0f2f5; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: var(--bg); }
         
-        /* SELEÇÃO INICIAL */
-        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg); }
-        .choice-btn { width: 300px; padding: 20px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 15px; border: none; font-weight: bold; transition: 0.3s; }
+        /* TELAS */
+        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .choice-btn { width: 300px; padding: 20px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 15px; border: none; font-weight: bold; }
         .btn-medico { background: var(--primary); color: white; }
         .btn-tv { background: white; color: var(--primary); border: 2px solid var(--primary); }
 
-        /* LAYOUT TV (60% Vídeo / 40% Chamada) */
+        /* MÉDICO */
+        #doctor-area { text-align: center; padding: 20px; max-width: 500px; margin: auto; height: 100vh; overflow-y: auto; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { font-size: 16px; padding: 10px; width: 90%; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; }
+        .btn-action { padding: 12px; font-size: 16px; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+
+        /* TV */
         #tv-area { display: grid; grid-template-columns: 60% 40%; height: 100vh; width: 100vw; }
-        .video-container { background: black; position: relative; }
-        .call-container { display: flex; flex-direction: column; background: white; padding: 30px; text-align: center; border-left: 8px solid var(--primary); box-shadow: -10px 0 20px rgba(0,0,0,0.05); }
-
-        .header-tv { background: var(--primary); color: white; padding: 20px; border-radius: 10px; font-size: 22px; font-weight: bold; margin-bottom: 40px; }
-        .patient-label { color: #718096; font-size: 28px; font-weight: 600; text-transform: uppercase; }
-        .patient-name { font-size: 75px; font-weight: 900; color: var(--primary); margin: 30px 0; line-height: 1.1; word-wrap: break-word; text-transform: uppercase; }
-        .room-tag { font-size: 35px; color: var(--accent); font-weight: bold; border: 3px solid var(--accent); display: inline-block; padding: 10px 30px; border-radius: 50px; margin-top: 20px; }
-
-        /* BOTÃO DE ATIVAÇÃO */
-        #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26, 54, 93, 0.95); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
+        .video-container { background: black; }
+        .call-container { display: flex; flex-direction: column; background: white; padding: 30px; text-align: center; border-left: 10px solid var(--primary); }
+        .patient-name { font-size: clamp(40px, 8vw, 80px); font-weight: 900; color: var(--primary); margin: 40px 0; text-transform: uppercase; }
+        
+        #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26,54,93,0.98); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="setup-area">
-        <h1 style="color: var(--primary)">Sistema de Atendimento</h1>
-        <button class="choice-btn btn-medico" onclick="escolher('medico')">ACESSAR CONSULTÓRIO</button>
-        <button class="choice-btn btn-tv" onclick="escolher('tv')">ABRIR PAINEL DA TV</button>
+        <button class="choice-btn btn-medico" onclick="escolher('medico')">MODO CONSULTÓRIO</button>
+        <button class="choice-btn btn-tv" onclick="escolher('tv')">MODO RECEPÇÃO (TV)</button>
     </div>
 
-    <div id="doctor-area" class="hidden" style="text-align: center; padding-top: 100px;">
-        <div style="background: white; display: inline-block; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-            <h2 style="color: var(--primary)">Painel do Médico</h2>
-            <input type="text" id="pacienteNome" placeholder="Nome do Paciente" style="font-size: 22px; padding: 15px; width: 85%; border-radius: 10px; border: 1px solid #ccc;">
-            <br><br>
-            <button onclick="chamar()" style="padding: 15px 50px; font-size: 20px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; width: 100%;">CHAMAR AGORA</button>
+    <div id="doctor-area" class="hidden">
+        <div class="card">
+            <h3 style="color: var(--primary); margin:0 0 15px 0;">Chamar Paciente</h3>
+            <input type="text" id="pacienteNome" placeholder="Nome do Paciente">
+            <button class="btn-action" style="background: var(--primary);" onclick="chamar()">CHAMAR AGORA</button>
+        </div>
+        
+        <div class="card">
+            <h3 style="color: var(--accent); margin:0 0 15px 0;">Playlist da TV (3 Vídeos)</h3>
+            <input type="text" id="v1" placeholder="Link Vídeo 1">
+            <input type="text" id="v2" placeholder="Link Vídeo 2">
+            <input type="text" id="v3" placeholder="Link Vídeo 3">
+            <button class="btn-action" style="background: var(--accent);" onclick="salvarPlaylist()">ATUALIZAR PLAYLIST</button>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <button id="btn-audio-fix" onclick="ativarAudio()">
-            <span style="font-size: 80px; margin-bottom: 20px;">🔊</span>
-            CLIQUE PARA INICIAR O PAINEL
-        </button>
-        
+        <button id="btn-audio-fix" onclick="ativarAudio()">CLIQUE PARA INICIAR PAINEL</button>
         <div class="video-container">
-            <iframe id="yt-player" width="100%" height="100%" 
-                src="" 
-                frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
-            </iframe>
-        </div>
-
+            <div id="player"></div> </div>
         <div class="call-container">
-            <div class="header-tv">DR. RODRIGO - ULTRASSONOGRAFIA</div>
+            <div style="background: var(--primary); color: white; padding: 20px; border-radius: 10px; font-weight: bold;">ATENDIMENTO</div>
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <span class="patient-label">Paciente</span>
-                <div class="patient-name" id="displayNome">Aguardando...</div>
-                <div><span class="room-tag">SALA 01</span></div>
+                <span style="font-size: 24px; color: #718096;">PACIENTE</span>
+                <div class="patient-name" id="displayNome">AGUARDANDO</div>
+                <div style="font-size: 30px; color: var(--accent); font-weight: bold; border: 3px solid var(--accent); padding: 10px; border-radius: 50px;">SALA 01</div>
             </div>
         </div>
     </div>
 
     <script>
+        // Carrega a API do YouTube
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
         const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database().ref('chamada');
+        const db = firebase.database();
 
-        // --- CONFIGURAÇÃO DOS VÍDEOS ---
-        // Adicione aqui os IDs dos vídeos que você quer (o que vem depois do v= no YouTube)
-        const listaVideos = [
-            "7HPrwBvUf9w", // Vídeo 1 (Ex: Natureza)
-            "jfKfPfyJRdk", // Vídeo 2 (Ex: Lo-fi)
-            "5H_S9tH3n6k"  // Vídeo 3 (Ex: Aquário)
-        ];
-        let indiceAtual = 0;
+        let player;
+        let playlistIDs = [];
+        let currentVideoIndex = 0;
 
         function escolher(tipo) {
             document.getElementById('setup-area').classList.add('hidden');
@@ -92,37 +90,83 @@
                 document.getElementById('doctor-area').classList.remove('hidden');
             } else {
                 document.getElementById('tv-area').classList.remove('hidden');
-                // Carrega o primeiro vídeo da lista
-                mudarVideo();
-                db.on('value', (s) => {
-                    const data = s.val();
-                    if(data) {
-                        document.getElementById('displayNome').innerText = data.nome.toUpperCase();
-                        falar(data.nome);
-                        proximoVideo(); // Muda o vídeo toda vez que chama alguém
-                    }
+                configurarTV();
+            }
+        }
+
+        // --- MÉDICO ---
+        function chamar() {
+            const nome = document.getElementById('pacienteNome').value;
+            if(nome) {
+                db.ref('chamada').set({ nome: nome, t: Date.now() });
+                document.getElementById('pacienteNome').value = "";
+            }
+        }
+
+        function extrairID(link) {
+            if(!link) return null;
+            if(link.includes("v=")) return link.split("v=")[1].split("&")[0];
+            if(link.includes("youtu.be/")) return link.split("youtu.be/")[1].split("?")[0];
+            return link;
+        }
+
+        function salvarPlaylist() {
+            const ids = [
+                extrairID(document.getElementById('v1').value),
+                extrairID(document.getElementById('v2').value),
+                extrairID(document.getElementById('v3').value)
+            ].filter(id => id !== null);
+            
+            if(ids.length > 0) {
+                db.ref('playlist').set({ ids: ids, t: Date.now() });
+                alert("Playlist enviada!");
+            }
+        }
+
+        // --- TV ---
+        function onYouTubeIframeAPIReady() {
+            // Apenas inicializa o objeto, o vídeo vem do Firebase
+        }
+
+        function configurarTV() {
+            db.ref('chamada').on('value', (s) => {
+                const data = s.val();
+                if(data) {
+                    document.getElementById('displayNome').innerText = data.nome.toUpperCase();
+                    falar(data.nome);
+                }
+            });
+
+            db.ref('playlist').on('value', (s) => {
+                const data = s.val();
+                if(data && data.ids) {
+                    playlistIDs = data.ids;
+                    currentVideoIndex = 0;
+                    carregarVideo(playlistIDs[currentVideoIndex]);
+                }
+            });
+        }
+
+        function carregarVideo(id) {
+            if (player) {
+                player.loadVideoById(id);
+            } else {
+                player = new YT.Player('player', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: id,
+                    playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1 },
+                    events: { 'onStateChange': onPlayerStateChange }
                 });
             }
         }
 
-        function chamar() {
-            const input = document.getElementById('pacienteNome');
-            if(input.value) {
-                db.set({ nome: input.value, t: Date.now() });
-                input.value = "";
-                input.focus();
+        function onPlayerStateChange(event) {
+            // Se o vídeo terminou (YT.PlayerState.ENDED = 0)
+            if (event.data === 0) {
+                currentVideoIndex = (currentVideoIndex + 1) % playlistIDs.length;
+                player.loadVideoById(playlistIDs[currentVideoIndex]);
             }
-        }
-
-        function mudarVideo() {
-            const player = document.getElementById('yt-player');
-            const id = listaVideos[indiceAtual];
-            player.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}`;
-        }
-
-        function proximoVideo() {
-            indiceAtual = (indiceAtual + 1) % listaVideos.length;
-            mudarVideo();
         }
 
         function falar(nome) {
@@ -133,8 +177,7 @@
 
         function ativarAudio() {
             document.getElementById('btn-audio-fix').classList.add('hidden');
-            const player = document.getElementById('yt-player');
-            player.src = player.src.replace("mute=1", "mute=0");
+            if(player) player.unMute();
         }
     </script>
 </body>
