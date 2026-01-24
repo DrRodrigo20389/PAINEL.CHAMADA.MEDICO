@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Dr. Rodrigo v5.0</title>
+    <title>Painel Dr. Rodrigo v6.0 - Master Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -19,15 +19,19 @@
         /* MÉDICO */
         #doctor-area { text-align: center; padding: 20px; max-width: 500px; margin: auto; height: 100vh; overflow-y: auto; }
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input { font-size: 16px; padding: 12px; width: 90%; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; }
+        input[type="text"] { font-size: 16px; padding: 12px; width: 90%; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; }
         .btn-action { padding: 15px; font-size: 16px; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        
+        /* Slider de Volume */
+        .volume-control { margin: 20px 0; }
+        input[type="range"] { width: 100%; cursor: pointer; }
 
         /* TV */
         #tv-area { display: grid; grid-template-columns: 55% 45%; height: 100vh; width: 100vw; }
         .video-container { background: black; }
         .call-container { display: flex; flex-direction: column; background: white; padding: 30px; text-align: center; border-left: 10px solid var(--primary); }
         .patient-name { font-size: clamp(35px, 6vw, 75px); font-weight: 900; color: var(--primary); margin: 30px 0; text-transform: uppercase; line-height: 1.1; }
-        .room-tag { font-size: 28px; color: var(--accent); font-weight: bold; border: 3px solid var(--accent); padding: 15px 25px; border-radius: 15px; display: inline-block; margin-top: 10px; line-height: 1.2; }
+        .room-tag { font-size: 28px; color: var(--accent); font-weight: bold; border: 3px solid var(--accent); padding: 15px 25px; border-radius: 15px; display: inline-block; margin-top: 10px; }
         
         #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26,54,93,0.98); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; }
         .hidden { display: none !important; }
@@ -42,13 +46,21 @@
 
     <div id="doctor-area" class="hidden">
         <div class="card">
-            <h3 style="color: var(--primary); margin-bottom:15px;">Chamar Paciente</h3>
+            <h3 style="color: var(--primary); margin:0 0 15px 0;">Chamar Paciente</h3>
             <input type="text" id="pacienteNome" placeholder="Nome do Paciente">
             <button class="btn-action" style="background: var(--primary);" onclick="chamar()">CHAMAR AGORA</button>
         </div>
+
+        <div class="card">
+            <h3 style="color: #e67e22; margin:0 0 10px 0;">Volume do YouTube</h3>
+            <div class="volume-control">
+                <input type="range" id="volSlider" min="0" max="100" value="30" oninput="atualizarVolumeFB(this.value)">
+                <p>Volume Atual: <span id="volValue">30</span>%</p>
+            </div>
+        </div>
         
         <div class="card">
-            <h3 style="color: var(--accent); margin-bottom:15px;">Playlist da TV</h3>
+            <h3 style="color: var(--accent); margin:0 0 15px 0;">Playlist da TV</h3>
             <input type="text" id="v1" placeholder="Link Vídeo 1">
             <input type="text" id="v2" placeholder="Link Vídeo 2">
             <input type="text" id="v3" placeholder="Link Vídeo 3">
@@ -62,10 +74,10 @@
             <div id="player"></div>
         </div>
         <div class="call-container">
-            <div style="background: var(--primary); color: white; padding: 15px; border-radius: 10px; font-weight: bold; letter-spacing: 1px;">PAINEL DE ATENDIMENTO</div>
+            <div style="background: var(--primary); color: white; padding: 15px; border-radius: 10px; font-weight: bold;">PAINEL DE ATENDIMENTO</div>
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <span style="font-size: 22px; color: #718096; font-weight: 600; text-transform: uppercase;">Paciente</span>
-                <div class="patient-name" id="displayNome">Aguardando...</div>
+                <span style="font-size: 22px; color: #718096; font-weight: 600;">PACIENTE</span>
+                <div class="patient-name" id="displayNome">AGUARDANDO...</div>
                 <div><span class="room-tag">SALA DE<br>ULTRASSONOGRAFIA</span></div>
             </div>
         </div>
@@ -84,24 +96,28 @@
         let player;
         let playlistIDs = [];
         let currentVideoIndex = 0;
-        const VOLUME_AMBIENTE = 30; // 30% de volume para o YouTube
-        const VOLUME_MUDO = 5;      // 5% enquanto fala
+        let volumeAmbienteGlobal = 30; // Valor padrão
 
         function escolher(tipo) {
             document.getElementById('setup-area').classList.add('hidden');
             if (tipo === 'medico') {
                 document.getElementById('doctor-area').classList.remove('hidden');
+                // Sincroniza o slider com o valor atual do banco
+                db.ref('config/volume').on('value', (s) => {
+                    const v = s.val() || 30;
+                    document.getElementById('volSlider').value = v;
+                    document.getElementById('volValue').innerText = v;
+                });
             } else {
                 document.getElementById('tv-area').classList.remove('hidden');
                 configurarTV();
             }
         }
 
-        function extrairID(link) {
-            if(!link) return null;
-            if(link.includes("v=")) return link.split("v=")[1].split("&")[0];
-            if(link.includes("youtu.be/")) return link.split("youtu.be/")[1].split("?")[0];
-            return link;
+        // --- MÉDICO ---
+        function atualizarVolumeFB(val) {
+            document.getElementById('volValue').innerText = val;
+            db.ref('config/volume').set(parseInt(val));
         }
 
         function chamar() {
@@ -114,15 +130,19 @@
         }
 
         function salvarPlaylist() {
-            const ids = [
-                extrairID(document.getElementById('v1').value),
-                extrairID(document.getElementById('v2').value),
-                extrairID(document.getElementById('v3').value)
-            ].filter(id => id !== null);
+            const extrair = (l) => {
+                if(!l) return null;
+                if(l.includes("v=")) return l.split("v=")[1].split("&")[0];
+                if(l.includes("youtu.be/")) return l.split("youtu.be/")[1].split("?")[0];
+                return l;
+            };
+            const ids = [extrair(document.getElementById('v1').value), extrair(document.getElementById('v2').value), extrair(document.getElementById('v3').value)].filter(id => id !== null);
             if(ids.length > 0) db.ref('playlist').set({ ids: ids, t: Date.now() });
         }
 
+        // --- TV ---
         function configurarTV() {
+            // Escuta Chamadas
             db.ref('chamada').on('value', (s) => {
                 const data = s.val();
                 if(data) {
@@ -131,6 +151,7 @@
                 }
             });
 
+            // Escuta Playlist
             db.ref('playlist').on('value', (s) => {
                 const data = s.val();
                 if(data && data.ids) {
@@ -139,53 +160,45 @@
                     carregarVideo(playlistIDs[currentVideoIndex]);
                 }
             });
+
+            // Escuta Volume em tempo real
+            db.ref('config/volume').on('value', (s) => {
+                volumeAmbienteGlobal = s.val() || 30;
+                if(player && player.setVolume) player.setVolume(volumeAmbienteGlobal);
+            });
         }
 
         function carregarVideo(id) {
-            if (player) {
-                player.loadVideoById(id);
-            } else {
+            if (player) { player.loadVideoById(id); }
+            else {
                 player = new YT.Player('player', {
                     height: '100%', width: '100%', videoId: id,
                     playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1 },
                     events: { 
-                        'onReady': (e) => { e.target.setVolume(VOLUME_AMBIENTE); },
-                        'onStateChange': (e) => { if(e.data === 0) pularVideo(); } 
+                        'onReady': (e) => { e.target.setVolume(volumeAmbienteGlobal); },
+                        'onStateChange': (e) => { if(e.data === 0) { currentVideoIndex = (currentVideoIndex+1)%playlistIDs.length; player.loadVideoById(playlistIDs[currentVideoIndex]); }}
                     }
                 });
             }
         }
 
-        function pularVideo() {
-            currentVideoIndex = (currentVideoIndex + 1) % playlistIDs.length;
-            player.loadVideoById(playlistIDs[currentVideoIndex]);
-        }
-
         function falar(nome) {
-            if(player && player.setVolume) player.setVolume(VOLUME_MUDO);
+            if(player && player.setVolume) player.setVolume(5); // Baixa para 5% enquanto fala
 
-            // FRASE SOLICITADA
-            const textoParaFalar = `Paciente ${nome}, Sala de Ultrassonografia. Por gentileza, paciente ${nome}, queira se dirigir à sala de Ultrassonografia.`;
-            
-            const msg = new SpeechSynthesisUtterance(textoParaFalar);
+            const texto = `Paciente ${nome}, Sala de Ultrassonografia. Por gentileza, paciente ${nome}, queira se dirigir à sala de Ultrassonografia.`;
+            const msg = new SpeechSynthesisUtterance(texto);
             msg.lang = 'pt-BR';
             msg.rate = 0.9;
 
-            msg.onend = function() {
-                if(player && player.setVolume) {
-                    setTimeout(() => { player.setVolume(VOLUME_AMBIENTE); }, 500);
-                }
+            msg.onend = () => {
+                setTimeout(() => { if(player) player.setVolume(volumeAmbienteGlobal); }, 500);
             };
-
             window.speechSynthesis.speak(msg);
         }
 
         function ativarAudio() {
             document.getElementById('btn-audio-fix').classList.add('hidden');
-            if(player) {
-                player.unMute();
-                player.setVolume(VOLUME_AMBIENTE);
-            }
+            if(player) { player.unMute(); player.setVolume(volumeAmbienteGlobal); }
         }
     </script>
 </body>
