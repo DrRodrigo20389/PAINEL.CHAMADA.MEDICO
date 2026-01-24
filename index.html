@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Dr. Rodrigo v4.0 - Auto Volume</title>
+    <title>Painel Dr. Rodrigo v5.0</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -23,10 +23,11 @@
         .btn-action { padding: 15px; font-size: 16px; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
 
         /* TV */
-        #tv-area { display: grid; grid-template-columns: 60% 40%; height: 100vh; width: 100vw; }
+        #tv-area { display: grid; grid-template-columns: 55% 45%; height: 100vh; width: 100vw; }
         .video-container { background: black; }
         .call-container { display: flex; flex-direction: column; background: white; padding: 30px; text-align: center; border-left: 10px solid var(--primary); }
-        .patient-name { font-size: clamp(40px, 8vw, 80px); font-weight: 900; color: var(--primary); margin: 40px 0; text-transform: uppercase; line-height: 1.1; }
+        .patient-name { font-size: clamp(35px, 6vw, 75px); font-weight: 900; color: var(--primary); margin: 30px 0; text-transform: uppercase; line-height: 1.1; }
+        .room-tag { font-size: 28px; color: var(--accent); font-weight: bold; border: 3px solid var(--accent); padding: 15px 25px; border-radius: 15px; display: inline-block; margin-top: 10px; line-height: 1.2; }
         
         #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26,54,93,0.98); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; }
         .hidden { display: none !important; }
@@ -56,22 +57,21 @@
     </div>
 
     <div id="tv-area" class="hidden">
-        <button id="btn-audio-fix" onclick="ativarAudio()">CLIQUE PARA INICIAR O PAINEL</button>
+        <button id="btn-audio-fix" onclick="ativarAudio()">CLIQUE PARA INICIAR PAINEL</button>
         <div class="video-container">
             <div id="player"></div>
         </div>
         <div class="call-container">
-            <div style="background: var(--primary); color: white; padding: 20px; border-radius: 10px; font-weight: bold; letter-spacing: 2px;">ATENDIMENTO</div>
+            <div style="background: var(--primary); color: white; padding: 15px; border-radius: 10px; font-weight: bold; letter-spacing: 1px;">PAINEL DE ATENDIMENTO</div>
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <span style="font-size: 24px; color: #718096; font-weight: 600;">PACIENTE</span>
-                <div class="patient-name" id="displayNome">AGUARDANDO</div>
-                <div style="font-size: 30px; color: var(--accent); font-weight: bold; border: 4px solid var(--accent); padding: 15px; border-radius: 50px; display: inline-block; margin: 0 auto;">SALA 01</div>
+                <span style="font-size: 22px; color: #718096; font-weight: 600; text-transform: uppercase;">Paciente</span>
+                <div class="patient-name" id="displayNome">Aguardando...</div>
+                <div><span class="room-tag">SALA DE<br>ULTRASSONOGRAFIA</span></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Carrega API do YouTube
         var tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -84,6 +84,8 @@
         let player;
         let playlistIDs = [];
         let currentVideoIndex = 0;
+        const VOLUME_AMBIENTE = 30; // 30% de volume para o YouTube
+        const VOLUME_MUDO = 5;      // 5% enquanto fala
 
         function escolher(tipo) {
             document.getElementById('setup-area').classList.add('hidden');
@@ -95,7 +97,6 @@
             }
         }
 
-        // --- MÉDICO ---
         function extrairID(link) {
             if(!link) return null;
             if(link.includes("v=")) return link.split("v=")[1].split("&")[0];
@@ -120,9 +121,6 @@
             ].filter(id => id !== null);
             if(ids.length > 0) db.ref('playlist').set({ ids: ids, t: Date.now() });
         }
-
-        // --- TV ---
-        function onYouTubeIframeAPIReady() {}
 
         function configurarTV() {
             db.ref('chamada').on('value', (s) => {
@@ -150,7 +148,10 @@
                 player = new YT.Player('player', {
                     height: '100%', width: '100%', videoId: id,
                     playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1 },
-                    events: { 'onStateChange': (e) => { if(e.data === 0) pularVideo(); } }
+                    events: { 
+                        'onReady': (e) => { e.target.setVolume(VOLUME_AMBIENTE); },
+                        'onStateChange': (e) => { if(e.data === 0) pularVideo(); } 
+                    }
                 });
             }
         }
@@ -161,17 +162,18 @@
         }
 
         function falar(nome) {
-            // REDUZ VOLUME DO VÍDEO
-            if(player && player.setVolume) player.setVolume(10);
+            if(player && player.setVolume) player.setVolume(VOLUME_MUDO);
 
-            const msg = new SpeechSynthesisUtterance("Paciente " + nome + ", sala de ultrassonografia");
+            // FRASE SOLICITADA
+            const textoParaFalar = `Paciente ${nome}, Sala de Ultrassonografia. Por gentileza, paciente ${nome}, queira se dirigir à sala de Ultrassonografia.`;
+            
+            const msg = new SpeechSynthesisUtterance(textoParaFalar);
             msg.lang = 'pt-BR';
             msg.rate = 0.9;
 
-            // QUANDO A FALA TERMINAR, VOLTA O VOLUME
             msg.onend = function() {
                 if(player && player.setVolume) {
-                    setTimeout(() => { player.setVolume(100); }, 500);
+                    setTimeout(() => { player.setVolume(VOLUME_AMBIENTE); }, 500);
                 }
             };
 
@@ -182,7 +184,7 @@
             document.getElementById('btn-audio-fix').classList.add('hidden');
             if(player) {
                 player.unMute();
-                player.setVolume(100);
+                player.setVolume(VOLUME_AMBIENTE);
             }
         }
     </script>
