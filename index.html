@@ -3,30 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Dr. Rodrigo</title>
+    <title>Sistema Dr. Rodrigo + TV</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #1a365d; --accent: #2b6cb0; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        :root { --primary: #1a365d; --accent: #2b6cb0; --bg: #f0f2f5; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); overflow: hidden; }
         
-        /* TELA DE SELEÇÃO INICIAL */
-        #setup-area { text-align: center; background: white; padding: 50px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .choice-btn { display: block; width: 280px; padding: 20px; margin: 15px auto; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 12px; transition: 0.3s; }
+        /* TELA DE SELEÇÃO */
+        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .choice-btn { width: 300px; padding: 20px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 15px; border: none; font-weight: bold; transition: 0.3s; }
         .btn-medico { background: var(--primary); color: white; }
-        .btn-tv { background: #edf2f7; color: var(--primary); border: 2px solid var(--primary); }
-        .choice-btn:hover { transform: scale(1.05); opacity: 0.9; }
+        .btn-tv { background: white; color: var(--primary); border: 2px solid var(--primary); }
 
-        /* AREA DO MEDICO */
-        #doctor-area { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; text-align: center; border-top: 8px solid var(--primary); }
-        input { font-size: 18px; padding: 12px; width: 90%; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; }
-        .btn-chamar { font-size: 18px; font-weight: bold; padding: 12px; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; width: 100%; }
+        /* LAYOUT TV DIVIDIDA */
+        #tv-area { display: grid; grid-template-columns: 75% 25%; height: 100vh; width: 100vw; }
+        
+        .video-container { background: black; border-right: 5px solid var(--primary); }
+        .call-container { display: flex; flex-direction: column; background: white; padding: 20px; text-align: center; }
 
-        /* AREA DA TV */
-        #tv-area { width: 100vw; height: 100vh; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; }
-        .header { position: absolute; top: 0; background: var(--primary); color: white; width: 100%; padding: 20px; font-size: 24px; font-weight: bold; }
-        .name { font-size: clamp(50px, 10vw, 120px); font-weight: 900; color: var(--primary); margin: 20px 0; padding: 0 20px; }
-        #btn-audio-fix { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(26,54,93,0.9); color: white; border: none; font-size: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        .header-tv { background: var(--primary); color: white; padding: 15px; border-radius: 10px; font-size: 18px; margin-bottom: 20px; }
+        .patient-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .patient-name { font-size: 45px; font-weight: 900; color: var(--primary); margin: 20px 0; line-height: 1.2; word-wrap: break-word; }
+        
+        /* BOTÃO DE ÁUDIO GIGANTE */
+        #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; }
 
         .hidden { display: none !important; }
     </style>
@@ -34,32 +35,43 @@
 <body>
 
     <div id="setup-area">
-        <h2 style="color: var(--primary)">Configuração Inicial</h2>
-        <p>Onde este dispositivo será usado?</p>
-        <button class="choice-btn btn-medico" onclick="escolher('medico')">ENTRAR COMO MÉDICO</button>
-        <button class="choice-btn btn-tv" onclick="escolher('tv')">ABRIR PAINEL DA TV</button>
+        <h1>Sistema Dr. Rodrigo</h1>
+        <button class="choice-btn btn-medico" onclick="escolher('medico')">MODO MÉDICO</button>
+        <button class="choice-btn btn-tv" onclick="escolher('tv')">MODO TV + VÍDEO</button>
     </div>
 
-    <div id="doctor-area" class="hidden">
-        <h2 style="margin-top:0">Consultório</h2>
-        <input type="text" id="pacienteNome" placeholder="Nome do Paciente" onkeypress="if(event.key==='Enter') chamar()">
-        <button class="btn-chamar" onclick="chamar()">CHAMAR PACIENTE</button>
-        <p id="status" style="margin-top:15px; color: #718096; font-size: 14px;"></p>
+    <div id="doctor-area" class="hidden" style="text-align: center; padding-top: 100px;">
+        <div style="background: white; display: inline-block; padding: 40px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+            <h2>Chamar Paciente</h2>
+            <input type="text" id="pacienteNome" placeholder="Nome do Paciente" style="font-size: 20px; padding: 10px; width: 80%;">
+            <br><br>
+            <button onclick="chamar()" style="padding: 15px 40px; font-size: 18px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer;">CHAMAR</button>
+        </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <button id="btn-audio-fix" onclick="ativarAudio()">
-            <span style="font-size: 60px;">🔊</span>
-            CLIQUE PARA ATIVAR O SOM DO PAINEL
-        </button>
-        <div class="header">PAINEL DE ATENDIMENTO</div>
-        <div style="font-size: 30px; color: #666; margin-top: 50px;">PACIENTE</div>
-        <div class="name" id="displayNome">AGUARDANDO...</div>
-        <div style="font-size: 40px; color: var(--accent); font-weight: bold;">SALA DE ULTRASSONOGRAFIA</div>
+        <button id="btn-audio-fix" onclick="ativarAudio()">CLIQUE PARA ATIVAR O SOM E VÍDEO</button>
+        
+        <div class="video-container">
+            <iframe id="yt-player" width="100%" height="100%" 
+                src="https://www.youtube.com/embed?listType=playlist&list=PL1B4CD8A2D781A89A&autoplay=1&mute=1&loop=1" 
+                frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+            </iframe>
+        </div>
+
+        <div class="call-container">
+            <div class="header-tv">ATENDIMENTO</div>
+            <div class="patient-info">
+                <span style="color: #666; font-size: 20px;">PACIENTE:</span>
+                <div class="patient-name" id="displayNome">AGUARDANDO...</div>
+                <hr style="width: 80%; border: 0.5px solid #eee;">
+                <div style="color: var(--accent); font-weight: bold; font-size: 22px; margin-top: 10px;">SALA 01</div>
+            </div>
+            <div style="font-size: 12px; color: #ccc;">Sistema Dr. Rodrigo v1.0</div>
+        </div>
     </div>
 
     <script>
-        // CONFIGURAÇÃO FIREBASE
         const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('chamada');
@@ -70,43 +82,32 @@
                 document.getElementById('doctor-area').classList.remove('hidden');
             } else {
                 document.getElementById('tv-area').classList.remove('hidden');
-                configurarEscutaTV();
+                db.on('value', (s) => {
+                    const data = s.val();
+                    if(data) {
+                        document.getElementById('displayNome').innerText = data.nome.toUpperCase();
+                        falar(data.nome);
+                    }
+                });
             }
         }
 
         function chamar() {
-            const input = document.getElementById('pacienteNome');
-            const nome = input.value;
-            if (nome) {
-                db.set({ nome: nome, t: Date.now() });
-                document.getElementById('status').innerText = "Chamado: " + nome;
-                input.value = "";
-                input.focus();
-            }
-        }
-
-        function configurarEscutaTV() {
-            db.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.nome) {
-                    document.getElementById('displayNome').innerText = data.nome.toUpperCase();
-                    falar(data.nome);
-                }
-            });
+            const n = document.getElementById('pacienteNome').value;
+            if(n) db.set({ nome: n, t: Date.now() });
         }
 
         function falar(nome) {
             const msg = new SpeechSynthesisUtterance("Paciente " + nome + ", sala de ultrassonografia");
             msg.lang = 'pt-BR';
-            msg.rate = 0.9;
             window.speechSynthesis.speak(msg);
         }
 
         function ativarAudio() {
             document.getElementById('btn-audio-fix').classList.add('hidden');
-            // Toca um som vazio só para desbloquear o áudio no navegador
-            const msg = new SpeechSynthesisUtterance("");
-            window.speechSynthesis.speak(msg);
+            // Tira o mudo do vídeo após o clique (limitação do YouTube/Chrome)
+            const iframe = document.getElementById('yt-player');
+            iframe.src = iframe.src.replace("mute=1", "mute=0");
         }
     </script>
 </body>
