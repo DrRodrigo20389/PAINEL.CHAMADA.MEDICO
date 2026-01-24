@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Dr. Rodrigo + TV</title>
+    <title>Painel Dr. Rodrigo - Premium</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root { --primary: #1a365d; --accent: #2b6cb0; --bg: #f0f2f5; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        /* TELA DE SELEÇÃO */
-        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        /* SELEÇÃO INICIAL */
+        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg); }
         .choice-btn { width: 300px; padding: 20px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 15px; border: none; font-weight: bold; transition: 0.3s; }
         .btn-medico { background: var(--primary); color: white; }
         .btn-tv { background: white; color: var(--primary); border: 2px solid var(--primary); }
 
-        /* LAYOUT TV DIVIDIDA */
-        #tv-area { display: grid; grid-template-columns: 75% 25%; height: 100vh; width: 100vw; }
-        
-        .video-container { background: black; border-right: 5px solid var(--primary); }
-        .call-container { display: flex; flex-direction: column; background: white; padding: 20px; text-align: center; }
+        /* LAYOUT TV (60% Vídeo / 40% Chamada) */
+        #tv-area { display: grid; grid-template-columns: 60% 40%; height: 100vh; width: 100vw; }
+        .video-container { background: black; position: relative; }
+        .call-container { display: flex; flex-direction: column; background: white; padding: 30px; text-align: center; border-left: 8px solid var(--primary); box-shadow: -10px 0 20px rgba(0,0,0,0.05); }
 
-        .header-tv { background: var(--primary); color: white; padding: 15px; border-radius: 10px; font-size: 18px; margin-bottom: 20px; }
-        .patient-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-        .patient-name { font-size: 45px; font-weight: 900; color: var(--primary); margin: 20px 0; line-height: 1.2; word-wrap: break-word; }
-        
-        /* BOTÃO DE ÁUDIO GIGANTE */
-        #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; }
+        .header-tv { background: var(--primary); color: white; padding: 20px; border-radius: 10px; font-size: 22px; font-weight: bold; margin-bottom: 40px; }
+        .patient-label { color: #718096; font-size: 28px; font-weight: 600; text-transform: uppercase; }
+        .patient-name { font-size: 75px; font-weight: 900; color: var(--primary); margin: 30px 0; line-height: 1.1; word-wrap: break-word; text-transform: uppercase; }
+        .room-tag { font-size: 35px; color: var(--accent); font-weight: bold; border: 3px solid var(--accent); display: inline-block; padding: 10px 30px; border-radius: 50px; margin-top: 20px; }
+
+        /* BOTÃO DE ATIVAÇÃO */
+        #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26, 54, 93, 0.95); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
         .hidden { display: none !important; }
     </style>
@@ -35,39 +35,40 @@
 <body>
 
     <div id="setup-area">
-        <h1>Sistema Dr. Rodrigo</h1>
-        <button class="choice-btn btn-medico" onclick="escolher('medico')">MODO MÉDICO</button>
-        <button class="choice-btn btn-tv" onclick="escolher('tv')">MODO TV + VÍDEO</button>
+        <h1 style="color: var(--primary)">Sistema de Atendimento</h1>
+        <button class="choice-btn btn-medico" onclick="escolher('medico')">ACESSAR CONSULTÓRIO</button>
+        <button class="choice-btn btn-tv" onclick="escolher('tv')">ABRIR PAINEL DA TV</button>
     </div>
 
     <div id="doctor-area" class="hidden" style="text-align: center; padding-top: 100px;">
-        <div style="background: white; display: inline-block; padding: 40px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
-            <h2>Chamar Paciente</h2>
-            <input type="text" id="pacienteNome" placeholder="Nome do Paciente" style="font-size: 20px; padding: 10px; width: 80%;">
+        <div style="background: white; display: inline-block; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <h2 style="color: var(--primary)">Painel do Médico</h2>
+            <input type="text" id="pacienteNome" placeholder="Nome do Paciente" style="font-size: 22px; padding: 15px; width: 85%; border-radius: 10px; border: 1px solid #ccc;">
             <br><br>
-            <button onclick="chamar()" style="padding: 15px 40px; font-size: 18px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer;">CHAMAR</button>
+            <button onclick="chamar()" style="padding: 15px 50px; font-size: 20px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; width: 100%;">CHAMAR AGORA</button>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <button id="btn-audio-fix" onclick="ativarAudio()">CLIQUE PARA ATIVAR O SOM E VÍDEO</button>
+        <button id="btn-audio-fix" onclick="ativarAudio()">
+            <span style="font-size: 80px; margin-bottom: 20px;">🔊</span>
+            CLIQUE PARA INICIAR O PAINEL
+        </button>
         
         <div class="video-container">
             <iframe id="yt-player" width="100%" height="100%" 
-                src="https://www.youtube.com/embed?listType=playlist&list=PL1B4CD8A2D781A89A&autoplay=1&mute=1&loop=1" 
+                src="" 
                 frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
             </iframe>
         </div>
 
         <div class="call-container">
-            <div class="header-tv">ATENDIMENTO</div>
-            <div class="patient-info">
-                <span style="color: #666; font-size: 20px;">PACIENTE:</span>
-                <div class="patient-name" id="displayNome">AGUARDANDO...</div>
-                <hr style="width: 80%; border: 0.5px solid #eee;">
-                <div style="color: var(--accent); font-weight: bold; font-size: 22px; margin-top: 10px;">SALA 01</div>
+            <div class="header-tv">DR. RODRIGO - ULTRASSONOGRAFIA</div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                <span class="patient-label">Paciente</span>
+                <div class="patient-name" id="displayNome">Aguardando...</div>
+                <div><span class="room-tag">SALA 01</span></div>
             </div>
-            <div style="font-size: 12px; color: #ccc;">Sistema Dr. Rodrigo v1.0</div>
         </div>
     </div>
 
@@ -76,25 +77,52 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database().ref('chamada');
 
+        // --- CONFIGURAÇÃO DOS VÍDEOS ---
+        // Adicione aqui os IDs dos vídeos que você quer (o que vem depois do v= no YouTube)
+        const listaVideos = [
+            "7HPrwBvUf9w", // Vídeo 1 (Ex: Natureza)
+            "jfKfPfyJRdk", // Vídeo 2 (Ex: Lo-fi)
+            "5H_S9tH3n6k"  // Vídeo 3 (Ex: Aquário)
+        ];
+        let indiceAtual = 0;
+
         function escolher(tipo) {
             document.getElementById('setup-area').classList.add('hidden');
             if (tipo === 'medico') {
                 document.getElementById('doctor-area').classList.remove('hidden');
             } else {
                 document.getElementById('tv-area').classList.remove('hidden');
+                // Carrega o primeiro vídeo da lista
+                mudarVideo();
                 db.on('value', (s) => {
                     const data = s.val();
                     if(data) {
                         document.getElementById('displayNome').innerText = data.nome.toUpperCase();
                         falar(data.nome);
+                        proximoVideo(); // Muda o vídeo toda vez que chama alguém
                     }
                 });
             }
         }
 
         function chamar() {
-            const n = document.getElementById('pacienteNome').value;
-            if(n) db.set({ nome: n, t: Date.now() });
+            const input = document.getElementById('pacienteNome');
+            if(input.value) {
+                db.set({ nome: input.value, t: Date.now() });
+                input.value = "";
+                input.focus();
+            }
+        }
+
+        function mudarVideo() {
+            const player = document.getElementById('yt-player');
+            const id = listaVideos[indiceAtual];
+            player.src = `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}`;
+        }
+
+        function proximoVideo() {
+            indiceAtual = (indiceAtual + 1) % listaVideos.length;
+            mudarVideo();
         }
 
         function falar(nome) {
@@ -105,9 +133,8 @@
 
         function ativarAudio() {
             document.getElementById('btn-audio-fix').classList.add('hidden');
-            // Tira o mudo do vídeo após o clique (limitação do YouTube/Chrome)
-            const iframe = document.getElementById('yt-player');
-            iframe.src = iframe.src.replace("mute=1", "mute=0");
+            const player = document.getElementById('yt-player');
+            player.src = player.src.replace("mute=1", "mute=0");
         }
     </script>
 </body>
