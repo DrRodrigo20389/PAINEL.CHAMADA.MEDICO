@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Chamada | Dr. Ultrassonografista</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        :root {
+            --primary: #1a365d; /* Azul Marinho Médico */
+            --accent: #2b6cb0;
+            --bg: #f8fafc;
+            --text: #2d3748;
+        }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        
+        /* Layout Médico */
+        #doctor-area { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 400px; text-align: center; border-top: 8px solid var(--primary); }
+        input { font-size: 18px; padding: 12px; width: 90%; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 20px; outline: none; }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2); }
+        button { font-size: 18px; font-weight: bold; padding: 12px 30px; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 8px; width: 100%; transition: 0.2s; }
+        button:hover { background: var(--accent); transform: translateY(-1px); }
+
+        /* Layout TV Recepção */
+        #tv-area { width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; }
+        .tv-header { position: absolute; top: 0; width: 100%; padding: 30px; background: var(--primary); color: white; text-align: center; font-size: 24px; letter-spacing: 2px; }
+        .patient-card { text-align: center; animation: slideIn 0.5s ease-out; }
+        .patient-label { font-size: 32px; color: #718096; text-transform: uppercase; margin-bottom: 10px; }
+        .patient-name { font-size: 110px; font-weight: 900; color: var(--primary); margin: 0; line-height: 1.1; }
+        .room-label { font-size: 45px; color: var(--accent); margin-top: 20px; font-weight: 600; }
+        
+        .hidden { display: none; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="doctor-area" class="hidden">
+        <h2 style="margin-top:0">Chamar Paciente</h2>
+        <input type="text" id="pacienteNome" placeholder="Digite o nome completo" onkeypress="if(event.key==='Enter') chamar()">
+        <button onclick="chamar()">CHAMAR AGORA</button>
+        <p id="status" style="margin-top:15px; font-size:14px; color: #718096;"></p>
+    </div>
+
+    <div id="tv-area" class="hidden">
+        <div class="tv-header">PAINEL DE ATENDIMENTO - ULTRASSONOGRAFIA</div>
+        <div class="patient-card">
+            <div class="patient-label">Paciente</div>
+            <h1 id="displayNome">EM AGUARDO</h1>
+            <div class="room-label" id="salaLabel">SALA DE EXAMES 01</div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO CONECTADA AO SEU LINK
+        const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database().ref('chamada');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const modo = urlParams.get('modo');
+
+        if (modo === 'medico') {
+            document.getElementById('doctor-area').classList.remove('hidden');
+        } else {
+            document.getElementById('tv-area').classList.remove('hidden');
+            // Escuta em tempo real
+            db.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.nome) {
+                    atualizarPainel(data.nome);
+                }
+            });
+        }
+
+        function chamar() {
+            const campo = document.getElementById('pacienteNome');
+            const nome = campo.value;
+            if (nome) {
+                db.set({ nome: nome, t: Date.now() });
+                document.getElementById('status').innerText = "Último chamado: " + nome;
+                campo.value = ""; // limpa o campo
+                campo.focus();
+            }
+        }
+
+        function atualizarPainel(nome) {
+            const el = document.getElementById('displayNome');
+            el.innerText = nome.toUpperCase();
+            
+            // Som de alerta (Beep de aeroporto)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.5);
+
+            // Voz
+            const fala = new SpeechSynthesisUtterance("Paciente " + nome + ", favor dirigir-se à sala de ultrassonografia");
+            fala.lang = 'pt-BR';
+            fala.rate = 0.9;
+            window.speechSynthesis.speak(fala);
+        }
+    </script>
+</body>
+</html>
