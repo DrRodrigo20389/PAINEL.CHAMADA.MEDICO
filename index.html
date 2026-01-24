@@ -3,35 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Dr. Rodrigo v6.0 - Master Control</title>
+    <title>Dashboard Dr. Rodrigo v7.0</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #1a365d; --accent: #2b6cb0; --bg: #f0f2f5; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: var(--bg); }
+        :root { --primary: #1a365d; --accent: #2b6cb0; --bg: #f0f2f5; --white: #ffffff; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: #333; }
         
-        /* TELAS */
+        /* SELEÇÃO INICIAL */
         #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .choice-btn { width: 300px; padding: 20px; margin: 10px; font-size: 20px; cursor: pointer; border-radius: 15px; border: none; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .choice-btn { width: 350px; padding: 25px; margin: 15px; font-size: 22px; cursor: pointer; border-radius: 12px; border: none; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .btn-medico { background: var(--primary); color: white; }
-        .btn-tv { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-tv { background: var(--white); color: var(--primary); border: 2px solid var(--primary); }
 
-        /* MÉDICO */
-        #doctor-area { text-align: center; padding: 20px; max-width: 500px; margin: auto; height: 100vh; overflow-y: auto; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input[type="text"] { font-size: 16px; padding: 12px; width: 90%; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; }
-        .btn-action { padding: 15px; font-size: 16px; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        /* DASHBOARD DESKTOP DO MÉDICO */
+        #doctor-area { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 25px; padding: 40px; max-width: 1200px; margin: auto; height: 100vh; box-sizing: border-box; }
+        .card { background: var(--white); padding: 30px; border-radius: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); }
         
-        /* Slider de Volume */
-        .volume-control { margin: 20px 0; }
-        input[type="range"] { width: 100%; cursor: pointer; }
+        /* Seção Chamada (Ocupa as duas linhas da esquerda) */
+        .card-call { grid-row: span 2; display: flex; flex-direction: column; justify-content: center; }
+        
+        h3 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 25px; }
+        input[type="text"] { font-size: 20px; padding: 15px; width: 100%; border-radius: 10px; border: 2px solid #e2e8f0; margin-bottom: 20px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        input[type="text"]:focus { border-color: var(--accent); }
+        
+        .btn-call { background: var(--primary); color: white; font-size: 22px; padding: 20px; border: none; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; }
+        .btn-call:hover { background: #122844; transform: translateY(-2px); }
+        
+        /* Volume e Playlist */
+        .vol-display { font-size: 40px; font-weight: bold; color: var(--accent); margin: 10px 0; }
+        input[type="range"] { width: 100%; height: 15px; border-radius: 10px; background: #dbeafe; outline: none; cursor: pointer; -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 25px; height: 25px; background: var(--accent); border-radius: 50%; }
+
+        .btn-save { background: var(--accent); color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
 
         /* TV */
-        #tv-area { display: grid; grid-template-columns: 55% 45%; height: 100vh; width: 100vw; }
-        .video-container { background: black; }
-        .call-container { display: flex; flex-direction: column; background: white; padding: 30px; text-align: center; border-left: 10px solid var(--primary); }
-        .patient-name { font-size: clamp(35px, 6vw, 75px); font-weight: 900; color: var(--primary); margin: 30px 0; text-transform: uppercase; line-height: 1.1; }
-        .room-tag { font-size: 28px; color: var(--accent); font-weight: bold; border: 3px solid var(--accent); padding: 15px 25px; border-radius: 15px; display: inline-block; margin-top: 10px; }
+        #tv-area { display: grid; grid-template-columns: 55% 45%; height: 100vh; width: 100vw; background: #000; }
+        .call-container { background: white; padding: 40px; text-align: center; border-left: 15px solid var(--primary); display: flex; flex-direction: column; justify-content: center; }
+        .patient-name { font-size: 90px; font-weight: 900; color: var(--primary); text-transform: uppercase; margin: 40px 0; line-height: 1; }
         
         #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26,54,93,0.98); color: white; z-index: 1000; border: none; font-size: 30px; cursor: pointer; }
         .hidden { display: none !important; }
@@ -40,46 +49,45 @@
 <body>
 
     <div id="setup-area">
-        <button class="choice-btn btn-medico" onclick="escolher('medico')">MODO CONSULTÓRIO</button>
-        <button class="choice-btn btn-tv" onclick="escolher('tv')">MODO RECEPÇÃO (TV)</button>
+        <h1 style="color: var(--primary); margin-bottom: 30px;">Sistema de Gestão de Atendimento</h1>
+        <button class="choice-btn btn-medico" onclick="escolher('medico')">ENTRAR NO DASHBOARD</button>
+        <button class="choice-btn btn-tv" onclick="escolher('tv')">ABRIR PAINEL DA TV</button>
     </div>
 
     <div id="doctor-area" class="hidden">
-        <div class="card">
-            <h3 style="color: var(--primary); margin:0 0 15px 0;">Chamar Paciente</h3>
-            <input type="text" id="pacienteNome" placeholder="Nome do Paciente">
-            <button class="btn-action" style="background: var(--primary);" onclick="chamar()">CHAMAR AGORA</button>
+        <div class="card card-call">
+            <h3>CHAMADA DE PACIENTE</h3>
+            <p style="color: #666;">Digite o nome e pressione <b>ENTER</b> ou clique no botão.</p>
+            <input type="text" id="pacienteNome" placeholder="Nome Completo do Paciente" autocomplete="off">
+            <button class="btn-call" onclick="chamar()">CHAMAR PACIENTE AGORA</button>
+            <div id="log-chamada" style="margin-top: 30px; color: #2ecc71; font-weight: bold; font-size: 18px; text-align: center;"></div>
         </div>
 
         <div class="card">
-            <h3 style="color: #e67e22; margin:0 0 10px 0;">Volume do YouTube</h3>
-            <div class="volume-control">
+            <h3>VOLUME AMBIENTE (TV)</h3>
+            <div style="text-align: center;">
+                <div class="vol-display"><span id="volValue">30</span>%</div>
                 <input type="range" id="volSlider" min="0" max="100" value="30" oninput="atualizarVolumeFB(this.value)">
-                <p>Volume Atual: <span id="volValue">30</span>%</p>
+                <p style="color: #999; font-size: 14px; margin-top: 15px;">Ajuste o som do YouTube na recepção em tempo real.</p>
             </div>
         </div>
-        
+
         <div class="card">
-            <h3 style="color: var(--accent); margin:0 0 15px 0;">Playlist da TV</h3>
-            <input type="text" id="v1" placeholder="Link Vídeo 1">
-            <input type="text" id="v2" placeholder="Link Vídeo 2">
-            <input type="text" id="v3" placeholder="Link Vídeo 3">
-            <button class="btn-action" style="background: var(--accent);" onclick="salvarPlaylist()">ATUALIZAR VÍDEOS</button>
+            <h3>PLAYLIST DA RECEPÇÃO</h3>
+            <input type="text" id="v1" placeholder="Link do YouTube 1" style="font-size: 14px; padding: 10px;">
+            <input type="text" id="v2" placeholder="Link do YouTube 2" style="font-size: 14px; padding: 10px;">
+            <input type="text" id="v3" placeholder="Link do YouTube 3" style="font-size: 14px; padding: 10px;">
+            <button class="btn-save" onclick="salvarPlaylist()">SINCRONIZAR VÍDEOS</button>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
         <button id="btn-audio-fix" onclick="ativarAudio()">CLIQUE PARA INICIAR PAINEL</button>
-        <div class="video-container">
-            <div id="player"></div>
-        </div>
+        <div style="background: black;"><div id="player"></div></div>
         <div class="call-container">
-            <div style="background: var(--primary); color: white; padding: 15px; border-radius: 10px; font-weight: bold;">PAINEL DE ATENDIMENTO</div>
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <span style="font-size: 22px; color: #718096; font-weight: 600;">PACIENTE</span>
-                <div class="patient-name" id="displayNome">AGUARDANDO...</div>
-                <div><span class="room-tag">SALA DE<br>ULTRASSONOGRAFIA</span></div>
-            </div>
+            <div style="background: var(--primary); color: white; padding: 20px; border-radius: 10px; font-weight: bold; font-size: 20px;">ATENDIMENTO</div>
+            <div class="patient-name" id="displayNome">AGUARDANDO</div>
+            <div style="font-size: 35px; color: var(--accent); font-weight: bold; border: 4px solid var(--accent); padding: 20px; border-radius: 15px;">SALA DE ULTRASSONOGRAFIA</div>
         </div>
     </div>
 
@@ -93,16 +101,15 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let player;
-        let playlistIDs = [];
-        let currentVideoIndex = 0;
-        let volumeAmbienteGlobal = 30; // Valor padrão
+        let player, playlistIDs = [], currentVideoIndex = 0, volumeAmbienteGlobal = 30;
+
+        // Monitor de teclado para o nome do paciente
+        document.getElementById('pacienteNome').addEventListener('keypress', (e) => { if(e.key === 'Enter') chamar(); });
 
         function escolher(tipo) {
             document.getElementById('setup-area').classList.add('hidden');
             if (tipo === 'medico') {
                 document.getElementById('doctor-area').classList.remove('hidden');
-                // Sincroniza o slider com o valor atual do banco
                 db.ref('config/volume').on('value', (s) => {
                     const v = s.val() || 30;
                     document.getElementById('volSlider').value = v;
@@ -114,7 +121,6 @@
             }
         }
 
-        // --- MÉDICO ---
         function atualizarVolumeFB(val) {
             document.getElementById('volValue').innerText = val;
             db.ref('config/volume').set(parseInt(val));
@@ -124,44 +130,34 @@
             const input = document.getElementById('pacienteNome');
             if(input.value) {
                 db.ref('chamada').set({ nome: input.value, t: Date.now() });
+                document.getElementById('log-chamada').innerText = "Último chamado: " + input.value.toUpperCase();
                 input.value = "";
                 input.focus();
             }
         }
 
-        function salvarPlaylist() {
-            const extrair = (l) => {
-                if(!l) return null;
-                if(l.includes("v=")) return l.split("v=")[1].split("&")[0];
-                if(l.includes("youtu.be/")) return l.split("youtu.be/")[1].split("?")[0];
-                return l;
-            };
-            const ids = [extrair(document.getElementById('v1').value), extrair(document.getElementById('v2').value), extrair(document.getElementById('v3').value)].filter(id => id !== null);
-            if(ids.length > 0) db.ref('playlist').set({ ids: ids, t: Date.now() });
+        function extrairID(l) {
+            if(!l) return null;
+            if(l.includes("v=")) return l.split("v=")[1].split("&")[0];
+            if(l.includes("youtu.be/")) return l.split("youtu.be/")[1].split("?")[0];
+            return l;
         }
 
-        // --- TV ---
+        function salvarPlaylist() {
+            const ids = [extrairID(document.getElementById('v1').value), extrairID(document.getElementById('v2').value), extrairID(document.getElementById('v3').value)].filter(id => id !== null);
+            if(ids.length > 0) db.ref('playlist').set({ ids: ids, t: Date.now() });
+            alert("Playlist atualizada na TV!");
+        }
+
         function configurarTV() {
-            // Escuta Chamadas
             db.ref('chamada').on('value', (s) => {
                 const data = s.val();
-                if(data) {
-                    document.getElementById('displayNome').innerText = data.nome.toUpperCase();
-                    falar(data.nome);
-                }
+                if(data) { document.getElementById('displayNome').innerText = data.nome.toUpperCase(); falar(data.nome); }
             });
-
-            // Escuta Playlist
             db.ref('playlist').on('value', (s) => {
                 const data = s.val();
-                if(data && data.ids) {
-                    playlistIDs = data.ids;
-                    currentVideoIndex = 0;
-                    carregarVideo(playlistIDs[currentVideoIndex]);
-                }
+                if(data && data.ids) { playlistIDs = data.ids; currentVideoIndex = 0; carregarVideo(playlistIDs[0]); }
             });
-
-            // Escuta Volume em tempo real
             db.ref('config/volume').on('value', (s) => {
                 volumeAmbienteGlobal = s.val() || 30;
                 if(player && player.setVolume) player.setVolume(volumeAmbienteGlobal);
@@ -183,16 +179,11 @@
         }
 
         function falar(nome) {
-            if(player && player.setVolume) player.setVolume(5); // Baixa para 5% enquanto fala
-
-            const texto = `Paciente ${nome}, Sala de Ultrassonografia. Por gentileza, paciente ${nome}, queira se dirigir à sala de Ultrassonografia.`;
-            const msg = new SpeechSynthesisUtterance(texto);
+            if(player && player.setVolume) player.setVolume(5);
+            const msg = new SpeechSynthesisUtterance(`Paciente ${nome}, Sala de Ultrassonografia. Por gentileza, paciente ${nome}, queira se dirigir à sala de Ultrassonografia.`);
             msg.lang = 'pt-BR';
             msg.rate = 0.9;
-
-            msg.onend = () => {
-                setTimeout(() => { if(player) player.setVolume(volumeAmbienteGlobal); }, 500);
-            };
+            msg.onend = () => { setTimeout(() => { if(player) player.setVolume(volumeAmbienteGlobal); }, 500); };
             window.speechSynthesis.speak(msg);
         }
 
