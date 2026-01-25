@@ -3,227 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Dr. Rodrigo v9.0</title>
+    <title>Sistema V18 - Sincronização Total</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
-        :root { --primary: #1a365d; --accent: #2b6cb0; --bg: #f4f7f9; }
+        :root {
+            /* DESIGN DARK NEON */
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #64748b;
+            --blue: #38bdf8; --purple: #c084fc; --orange: #fb923c; --green: #4ade80; --red: #f87171;
+            --border: #334155;
+        }
         
-        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
 
-        /* TELA INICIAL */
-        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-        .choice-btn { width: 300px; padding: 20px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .btn-medico { background: var(--primary); color: white; }
-        .btn-tv { background: white; color: var(--primary); border: 1px solid var(--primary); }
-
-        /* DASHBOARD MÉDICO (RE-ESCALONADO) */
-        #doctor-area { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            grid-template-rows: 45% 45%; 
-            gap: 20px; 
-            padding: 20px; 
-            max-width: 1200px; 
-            margin: auto; 
-            height: 100vh; 
-            box-sizing: border-box;
-            align-content: center;
+        /* TELA DE ESCOLHA */
+        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; z-index: 1000; position: relative; background: var(--bg); }
+        .choice-btn { 
+            width: 320px; padding: 25px; margin: 15px; font-size: 1.2rem; cursor: pointer; border-radius: 12px; 
+            border: 2px solid var(--blue); font-weight: bold; background: transparent; color: var(--blue);
+            transition: 0.3s; box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
         }
+        .choice-btn:hover { background: var(--blue); color: #0f172a; box-shadow: 0 0 30px rgba(56, 189, 248, 0.5); }
 
-        .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 15px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            border-top: 5px solid var(--primary);
-        }
+        /* LAYOUT MÉDICO */
+        #doctor-area { display: grid; grid-template-rows: auto 1fr; height: 100vh; padding: 15px; gap: 15px; box-sizing: border-box; }
 
-        .card-call { grid-row: span 2; }
-        h3 { margin: 0 0 15px 0; font-size: 1.2rem; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; }
+        .location-select { background: var(--card); color: var(--green); border: 1px solid var(--border); padding: 10px; border-radius: 8px; font-weight: bold; font-size: 1rem; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 380px 1fr 350px; gap: 15px; height: 100%; overflow: hidden; }
+
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* TIMER & STATUS */
+        .timer-box { background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 20px; transition: 0.3s; }
+        .timer-val { font-size: 5rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+        .timer-lbl { font-size: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; }
         
-        input[type="text"] { 
-            font-size: 18px; padding: 12px; width: 100%; border-radius: 8px; 
-            border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; 
-        }
+        .mode-idle { border-color: var(--border); }
+        .mode-exam { border-color: var(--blue); color: var(--blue); background: radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%); }
+        .mode-laudo { border-color: var(--purple); color: var(--purple); background: radial-gradient(circle, rgba(192,132,252,0.1) 0%, transparent 70%); }
+        .mode-wait { border-color: var(--orange); color: var(--orange); background: radial-gradient(circle, rgba(251,146,60,0.1) 0%, transparent 70%); }
 
-        .btn-call { 
-            background: var(--primary); color: white; font-size: 20px; padding: 15px; 
-            border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold;
-        }
+        .input-group { margin-bottom: 15px; }
+        input[type="text"], select { width: 100%; background: #0f172a; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; box-sizing: border-box; margin-bottom: 8px; font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--blue); }
 
-        .vol-display { font-size: 40px; font-weight: 800; color: #e67e22; }
+        .btn-action { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 1.1rem; margin-bottom: 10px; text-transform: uppercase; transition: 0.2s; color: #0f172a; }
+        .btn-action:hover { filter: brightness(1.1); }
+        
+        .btn-call { background: transparent; border: 2px solid var(--green); color: var(--green); }
+        .btn-call:hover { background: rgba(74, 222, 128, 0.1); color: var(--green); }
+        .btn-blue { background: var(--blue); } .btn-purple { background: var(--purple); } .btn-orange { background: var(--orange); } .btn-green { background: var(--green); }
 
-        /* PAINEL DA TV (RE-ESCALONADO) */
+        .call-log { text-align: center; color: var(--green); font-size: 0.9rem; padding: 10px; border: 1px dashed var(--border); border-radius: 6px; margin-bottom: 15px; min-height: 20px;}
+
+        /* TABELA E DADOS */
+        .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; text-align: center; }
+        .stat-val { font-size: 1.4rem; font-weight: bold; }
+        .stat-lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+
+        .table-container { flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th { position: sticky; top: 0; background: var(--card); color: var(--muted); padding: 12px; text-align: left; border-bottom: 2px solid var(--border); }
+        td { padding: 10px 12px; border-bottom: 1px solid #334155; }
+
+        /* CONTROLE TV */
+        .tv-controls h4 { margin-top: 0; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .slider { width: 100%; accent-color: var(--blue); }
+        .input-link { font-size: 0.85rem; padding: 8px; color: var(--blue); }
+
+        /* TELA TV */
         #tv-area { display: grid; grid-template-columns: 50% 50%; height: 100vh; width: 100vw; background: #000; }
-        .call-container { 
-            background: white; 
-            padding: 20px; 
-            text-align: center; 
-            border-left: 10px solid var(--primary); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center;
-            overflow: hidden;
-        }
-        /* Ajuste para o nome não cortar */
-        .patient-name { 
-            font-size: 5vw; /* Tamanho baseado na largura da tela */
-            font-weight: 900; 
-            color: var(--primary); 
-            text-transform: uppercase; 
-            margin: 20px 0; 
-            line-height: 1.1;
-            word-wrap: break-word;
-        }
-        
-        #btn-audio-fix { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(26,54,93,0.98); color: white; z-index: 1000; border: none; font-size: 24px; cursor: pointer; }
+        .tv-sidebar { background: var(--bg); border-left: 3px solid var(--blue); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+        .tv-status { color: var(--blue); border: 1px solid var(--blue); padding: 8px 30px; border-radius: 50px; font-size: 1.5vw; text-transform: uppercase; letter-spacing: 4px; }
+        .tv-name { font-size: 4vw; font-weight: 900; color: white; margin: 40px 0; line-height: 1.1; animation: pulse 2s infinite; }
+        .tv-loc { margin-top: auto; color: var(--muted); font-size: 1.2vw; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: 0.9; } }
+
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-content { background: var(--card); padding: 40px; border-radius: 15px; border: 1px solid var(--orange); text-align: center; width: 450px; }
+
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="setup-area">
-        <h2 style="color: var(--primary)">Painel Dr. Rodrigo</h2>
-        <button class="choice-btn btn-medico" onclick="escolher('medico')">DASHBOARD</button>
-        <button class="choice-btn btn-tv" onclick="escolher('tv')">TV RECEPÇÃO</button>
+        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 40px;">SISTEMA V18 FINAL</h1>
+        <button class="choice-btn" onclick="init('medico')">💻 DASHBOARD MÉDICO</button>
+        <button class="choice-btn" style="border-color:var(--green); color:var(--green)" onclick="init('tv')">📺 TELA DA RECEPÇÃO</button>
     </div>
 
     <div id="doctor-area" class="hidden">
-        <div class="card card-call">
-            <h3>Chamada</h3>
-            <input type="text" id="pacienteNome" placeholder="Nome do Paciente" autocomplete="off">
-            <button class="btn-call" onclick="chamar()">CHAMAR AGORA</button>
-            <div id="log-chamada" style="margin-top: 20px; color: #27ae60; font-weight: bold; font-size: 16px; text-align: center;"></div>
+        <div class="header-bar">
+            <h3 style="margin:0; color:var(--muted); text-transform: uppercase;">Painel de Controle</h3>
+            <select id="localSelect" class="location-select" onchange="updateLocal()">
+                <option>CEMIR LAPÃO</option>
+                <option>CEMIR AMÉRICA DOURADA</option>
+                <option>CEMIR CANARANA</option>
+                <option>DILAB BARRA DO MENDES</option>
+            </select>
         </div>
 
-        <div class="card" style="text-align: center;">
-            <h3>Volume TV</h3>
-            <div class="vol-display"><span id="volValue">30</span>%</div>
-            <input type="range" id="volSlider" min="0" max="100" value="30" oninput="atualizarVolumeFB(this.value)">
-        </div>
+        <div class="dashboard-grid">
+            <div class="panel">
+                <div id="timerDisplay" class="timer-box mode-idle">
+                    <div class="timer-lbl" id="statusLabel">AGUARDANDO</div>
+                    <div class="timer-val" id="timer">00:00</div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="pName" placeholder="Nome do Paciente..." autocomplete="off">
+                    <select id="pExams">
+                        <option value="1">1 Exame</option>
+                        <option value="2">2 Exames</option>
+                        <option value="3">3 Exames</option>
+                        <option value="4">4 Exames</option>
+                        <option value="5">5+ Exames</option>
+                    </select>
+                </div>
 
-        <div class="card">
-            <h3>Playlist</h3>
-            <input type="text" id="v1" placeholder="Vídeo 1" style="font-size: 14px; padding: 8px; margin-bottom: 5px;">
-            <input type="text" id="v2" placeholder="Vídeo 2" style="font-size: 14px; padding: 8px; margin-bottom: 5px;">
-            <input type="text" id="v3" placeholder="Vídeo 3" style="font-size: 14px; padding: 8px; margin-bottom: 5px;">
-            <button onclick="salvarPlaylist()" style="padding: 8px; cursor: pointer; background: var(--accent); color: white; border: none; border-radius: 5px;">SALVAR</button>
+                <div id="ctrl-start">
+                    <button onclick="tvChamada()" class="btn-action btn-call">📢 CHAMAR NA TV</button>
+                    <div id="lastCallDisplay" class="call-log">...</div>
+                    <button onclick="nextStep()" class="btn-action btn-blue">▶ INICIAR ATENDIMENTO</button>
+                </div>
+                <button id="ctrl-proc" onclick="nextStep()" class="btn-action btn-purple hidden">⏹ PACIENTE SAIU / LAUDAR</button>
+                <button id="ctrl-end" onclick="nextStep()" class="btn-action btn-green hidden">✔ FINALIZAR / SALA VAZIA</button>
+                <div id="ctrl-wait" class="hidden">
+                    <button onclick="tvChamada()" class="btn-action btn-call">📢 CHAMAR PRÓXIMO</button>
+                    <div id="lastCallDisplayWait" class="call-log">...</div>
+                    <button onclick="nextStep()" class="btn-action btn-orange">⌛ PACIENTE ENTROU</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="stats-bar">
+                    <div class="stat-box"><div class="stat-val" id="stExam" style="color:var(--blue)">0m</div><div class="stat-lbl">Exame</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stReport" style="color:var(--purple)">0m</div><div class="stat-lbl">Laudo</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stWait" style="color:var(--orange)">0m</div><div class="stat-lbl">Espera</div></div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Paciente</th><th>Qtd</th><th>Exame</th><th>Laudo</th><th>Espera</th></tr></thead>
+                        <tbody id="logBody"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button onclick="downloadJSON()" style="flex:1; padding:12px; background:var(--card); border:1px solid var(--green); color:var(--green); border-radius:6px; cursor:pointer;">💾 EXPORTAR</button>
+                    <button onclick="clearAll()" style="padding:12px; background:var(--card); border:1px solid var(--red); color:var(--red); border-radius:6px; cursor:pointer;">🗑 LIMPAR</button>
+                </div>
+            </div>
+
+            <div class="panel tv-controls">
+                <h4>CONTROLE TV</h4>
+                <label>VOLUME TV: <span id="volDisp" style="color:white; font-weight:bold;">30</span>%</label>
+                <input type="range" class="slider" id="volInp" min="0" max="100" value="30" oninput="setVol(this.value)">
+
+                <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 10px;">
+                    <label>LINK VÍDEO 1</label>
+                    <input type="text" id="vid1" class="input-link" placeholder="Cole link completo...">
+                    <label>LINK VÍDEO 2</label>
+                    <input type="text" id="vid2" class="input-link" placeholder="Cole link completo...">
+                    <label>LINK VÍDEO 3</label>
+                    <input type="text" id="vid3" class="input-link" placeholder="Cole link completo...">
+
+                    <button onclick="updatePlaylist()" class="btn-action btn-blue" style="margin-top:15px; font-size: 0.9rem; padding: 12px;">↻ SINCRONIZAR VÍDEOS</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <button id="btn-audio-fix" onclick="ativarAudio()">CLIQUE PARA INICIAR</button>
-        <div style="background: #000;"><div id="player"></div></div>
-        <div class="call-container">
-            <div style="background: var(--primary); color: white; padding: 10px; border-radius: 8px; font-weight: bold; display: inline-block; margin: 0 auto;">ATENDIMENTO</div>
-            <div class="patient-name" id="displayNome">AGUARDANDO</div>
-            <div style="font-size: 24px; color: var(--accent); font-weight: bold; border: 2px solid var(--accent); padding: 10px; border-radius: 10px;">SALA DE ULTRASSONOGRAFIA</div>
+        <div style="position:relative; width:100%; height:100%;">
+            <div id="player"></div>
+            <button id="unlockBtn" onclick="unlockAudio()" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); color:white; font-size:1.5rem; border:none; z-index:100; cursor:pointer;">🔊 CLIQUE AQUI PARA INICIAR 🔊</button>
+        </div>
+        <div class="tv-sidebar">
+            <div class="tv-status">CHAMADA</div>
+            <div class="tv-name" id="tvName">...</div>
+            <div class="tv-status" style="border-color:var(--purple); color:var(--purple); font-size:1.2vw; margin-top:30px;">SALA DE ULTRASSONOGRAFIA</div>
+            <div class="tv-loc" id="tvLoc"></div>
         </div>
     </div>
 
-    <script>
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    <div id="modalWait" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--orange);">FIM DO INTERVALO</h2>
+            <p style="color:var(--muted);">Tempo Parado:</p>
+            <div style="font-size: 3rem; font-weight: bold; color: white; margin-bottom: 30px;" id="modalTime">00:00</div>
+            <button class="btn-action btn-orange" onclick="endWait('recepcao')">🏢 DEMORA RECEPÇÃO</button>
+            <button class="btn-action" style="background:transparent; border:1px solid var(--muted); color:white; margin-top: 10px;" onclick="endWait('pausa')">☕ MINHA PAUSA</button>
+        </div>
+    </div>
 
-        const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+<script>
+    // FIREBASE
+    const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        let player, playlistIDs = [], currentVideoIndex = 0, volumeAmbienteGlobal = 30;
+    // VARIAVEIS
+    let mode, player, timerInt, startTime, waitDuration;
+    let state = 0; 
+    let curRec = {};
+    let records = JSON.parse(localStorage.getItem('recsV18')) || [];
+    let curLoc = localStorage.getItem('locV18') || 'CEMIR LAPÃO';
 
-        document.getElementById('pacienteNome').addEventListener('keypress', (e) => { if(e.key === 'Enter') chamar(); });
+    // REGEX BLINDADO
+    function extractVideoID(url) {
+        if(!url) return false;
+        var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        var match = url.match(regExp);
+        return (match && match[7].length == 11) ? match[7] : false;
+    }
 
-        function escolher(tipo) {
-            document.getElementById('setup-area').classList.add('hidden');
-            if (tipo === 'medico') {
-                document.getElementById('doctor-area').classList.remove('hidden');
-                db.ref('config/volume').on('value', (s) => {
-                    const v = s.val() || 30;
-                    document.getElementById('volSlider').value = v;
-                    document.getElementById('volValue').innerText = v;
-                });
-            } else {
-                document.getElementById('tv-area').classList.remove('hidden');
-                configurarTV();
-            }
-        }
-
-        function atualizarVolumeFB(val) {
-            document.getElementById('volValue').innerText = val;
-            db.ref('config/volume').set(parseInt(val));
-        }
-
-        function chamar() {
-            const input = document.getElementById('pacienteNome');
-            if(input.value) {
-                db.ref('chamada').set({ nome: input.value, t: Date.now() });
-                document.getElementById('log-chamada').innerText = "Chamado: " + input.value.toUpperCase();
-                input.value = "";
-                input.focus();
-            }
-        }
-
-        function extrairID(l) {
-            if(!l) return null;
-            if(l.includes("v=")) return l.split("v=")[1].split("&")[0];
-            if(l.includes("youtu.be/")) return l.split("youtu.be/")[1].split("?")[0];
-            return l;
-        }
-
-        function salvarPlaylist() {
-            const ids = [extrairID(document.getElementById('v1').value), extrairID(document.getElementById('v2').value), extrairID(document.getElementById('v3').value)].filter(id => id !== null);
-            if(ids.length > 0) db.ref('playlist').set({ ids: ids, t: Date.now() });
-            alert("Vídeos Sincronizados!");
-        }
-
-        function configurarTV() {
-            db.ref('chamada').on('value', (s) => {
-                const data = s.val();
-                if(data) { document.getElementById('displayNome').innerText = data.nome.toUpperCase(); falar(data.nome); }
+    function init(m) {
+        mode = m;
+        document.getElementById('setup-area').classList.add('hidden');
+        
+        if (m === 'medico') {
+            document.getElementById('doctor-area').classList.remove('hidden');
+            document.getElementById('localSelect').value = curLoc;
+            render();
+            
+            // CARREGAR CONFIGS DO FIREBASE PARA A TELA DO MEDICO (Memória)
+            db.ref('config/volume').on('value', s => { 
+                const v = s.val()||30; 
+                document.getElementById('volInp').value = v; 
+                document.getElementById('volDisp').innerText = v; 
             });
-            db.ref('playlist').on('value', (s) => {
-                const data = s.val();
-                if(data && data.ids) { playlistIDs = data.ids; currentVideoIndex = 0; carregarVideo(playlistIDs[0]); }
+            
+            db.ref('config/playlist').once('value', s => {
+                const list = s.val();
+                if(list) {
+                    if(list[0]) document.getElementById('vid1').value = "https://youtube.com/watch?v=" + list[0];
+                    if(list[1]) document.getElementById('vid2').value = "https://youtube.com/watch?v=" + list[1];
+                    if(list[2]) document.getElementById('vid3').value = "https://youtube.com/watch?v=" + list[2];
+                }
             });
-            db.ref('config/volume').on('value', (s) => {
-                volumeAmbienteGlobal = s.val() || 30;
-                if(player && player.setVolume) player.setVolume(volumeAmbienteGlobal);
+
+        } else {
+            document.getElementById('tv-area').classList.remove('hidden');
+            var tag = document.createElement('script'); 
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.body.appendChild(tag);
+            
+            // LISTENERS TV (SINCRONIA)
+            db.ref('chamada').on('value', s => { 
+                const d = s.val(); 
+                if(d && (Date.now() - d.t < 60000)) announce(d.nome, d.loc); 
+            });
+            
+            db.ref('config/volume').on('value', s => { if(player && player.setVolume) player.setVolume(s.val()); });
+            
+            // ATUALIZAÇÃO IMEDIATA DA PLAYLIST
+            db.ref('config/playlist').on('value', s => { 
+                const list = s.val();
+                if(player && list && list.length > 0 && typeof player.loadPlaylist === 'function') {
+                    console.log("Atualizando playlist na TV:", list);
+                    player.loadPlaylist(list);
+                    player.setLoop(true);
+                }
             });
         }
+    }
 
-        function carregarVideo(id) {
-            if (player) { player.loadVideoById(id); }
-            else {
-                player = new YT.Player('player', {
-                    height: '100%', width: '100%', videoId: id,
-                    playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1 },
-                    events: { 
-                        'onReady': (e) => { e.target.setVolume(volumeAmbienteGlobal); },
-                        'onStateChange': (e) => { if(e.data === 0) { currentVideoIndex = (currentVideoIndex+1)%playlistIDs.length; player.loadVideoById(playlistIDs[currentVideoIndex]); }}
-                    }
-                });
-            }
-        }
+    // --- FUNÇÕES DE SINCRONIA ---
+    function updatePlaylist() {
+        const v1 = document.getElementById('vid1').value;
+        const v2 = document.getElementById('vid2').value;
+        const v3 = document.getElementById('vid3').value;
+        
+        const id1 = extractVideoID(v1);
+        const id2 = extractVideoID(v2);
+        const id3 = extractVideoID(v3);
 
-        function falar(nome) {
-            if(player && player.setVolume) player.setVolume(5);
-            const msg = new SpeechSynthesisUtterance(`Paciente ${nome}, Sala de Ultrassonografia. Por gentileza, paciente ${nome}, queira se dirigir à sala de Ultrassonografia.`);
-            msg.lang = 'pt-BR';
-            msg.rate = 0.9;
-            msg.onend = () => { setTimeout(() => { if(player) player.setVolume(volumeAmbienteGlobal); }, 500); };
-            window.speechSynthesis.speak(msg);
+        const list = [id1, id2, id3].filter(id => id !== false);
+        
+        if(list.length > 0) {
+            // SALVA NO MESMO CAMINHO QUE A TV ESCUTA (config/playlist)
+            db.ref('config/playlist').set(list);
+            alert("Sincronizado! A TV deve mudar em instantes.");
+        } else {
+            alert("Cole links válidos do YouTube.");
         }
+    }
 
-        function ativarAudio() {
-            document.getElementById('btn-audio-fix').classList.add('hidden');
-            if(player) { player.unMute(); player.setVolume(volumeAmbienteGlobal); }
+    function tvChamada() {
+        const n = document.getElementById('pName').value;
+        if(!n) return alert("Digite o nome!");
+        db.ref('chamada').set({ nome: n, loc: curLoc, t: Date.now() });
+        const txt = `CHAMOU: ${n.toUpperCase()} (${new Date().toLocaleTimeString().slice(0,5)})`;
+        document.getElementById('lastCallDisplay').innerText = txt;
+        document.getElementById('lastCallDisplayWait').innerText = txt;
+    }
+
+    function setVol(v) { 
+        db.ref('config/volume').set(parseInt(v)); 
+        document.getElementById('volDisp').innerText = v; 
+    }
+
+    // --- PRODUTIVIDADE ---
+    function updateLocal() { curLoc = document.getElementById('localSelect').value; localStorage.setItem('locV18', curLoc); render(); }
+    
+    function timerStart() {
+        startTime = Date.now();
+        clearInterval(timerInt);
+        timerInt = setInterval(() => {
+            const diff = Date.now() - startTime;
+            const m = Math.floor(diff/60000).toString().padStart(2,'0');
+            const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+        }, 1000);
+    }
+
+    function nextStep() {
+        const ui = {
+            lbl: document.getElementById('statusLabel'),
+            box: document.getElementById('timerDisplay'),
+            btnStart: document.getElementById('ctrl-start'),
+            btnProc: document.getElementById('ctrl-proc'),
+            btnEnd: document.getElementById('ctrl-end'),
+            btnWait: document.getElementById('ctrl-wait'),
+            inp: document.getElementById('pName')
+        };
+
+        if(state === 0) { 
+            if(!ui.inp.value && !confirm("Sem nome?")) return;
+            state = 1; ui.inp.disabled = true;
+            ui.lbl.innerText = "EM EXAME"; ui.box.className = "timer-box mode-exam";
+            ui.btnStart.classList.add('hidden'); ui.btnProc.classList.remove('hidden');
+            timerStart();
+        } else if (state === 1) { 
+            curRec.exam = Date.now() - startTime;
+            state = 2;
+            ui.lbl.innerText = "LAUDO"; ui.box.className = "timer-box mode-laudo";
+            ui.btnProc.classList.add('hidden'); ui.btnEnd.classList.remove('hidden');
+            timerStart();
+        } else if (state === 2) { 
+            curRec.report = Date.now() - startTime;
+            curRec.name = ui.inp.value;
+            curRec.qtd = parseInt(document.getElementById('pExams').value);
+            curRec.loc = curLoc;
+            state = 3;
+            ui.lbl.innerText = "ESPERA"; ui.box.className = "timer-box mode-wait";
+            ui.btnEnd.classList.add('hidden'); ui.btnWait.classList.remove('hidden');
+            ui.inp.value = ''; ui.inp.disabled = false; ui.inp.focus();
+            document.getElementById('pExams').value = '1';
+            timerStart();
+        } else if (state === 3) { 
+            waitDuration = Date.now() - startTime;
+            clearInterval(timerInt);
+            const m = Math.floor(waitDuration/60000).toString().padStart(2,'0');
+            const s = Math.floor((waitDuration%60000)/1000).toString().padStart(2,'0');
+            document.getElementById('modalTime').innerText = `${m}:${s}`;
+            document.getElementById('modalWait').style.display = 'flex';
         }
-    </script>
+    }
+
+    function endWait(type) {
+        curRec.wait = waitDuration; curRec.wType = type;
+        records.push(curRec); localStorage.setItem('recsV18', JSON.stringify(records));
+        curRec = {}; state = 0;
+        document.getElementById('modalWait').style.display = 'none';
+        document.getElementById('ctrl-wait').classList.add('hidden');
+        document.getElementById('ctrl-start').classList.remove('hidden');
+        document.getElementById('statusLabel').innerText = "AGUARDANDO";
+        document.getElementById('timerDisplay').className = "timer-box mode-idle";
+        document.getElementById('timer').innerText = "00:00";
+        document.getElementById('lastCallDisplay').innerText = "...";
+        render();
+    }
+
+    function render() {
+        const tbody = document.getElementById('logBody'); tbody.innerHTML = '';
+        const fRecs = records.filter(r => r.loc === curLoc);
+        [...fRecs].reverse().forEach(r => {
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:bold; color:white;">${r.name}</td>
+                <td style="text-align:center">${r.qtd}</td>
+                <td style="color:var(--blue)">${fmt(r.exam)}</td>
+                <td style="color:var(--purple)">${fmt(r.report)}</td>
+                <td style="color:${r.wType=='recepcao'?'var(--orange)':'#555'}">${fmt(r.wait)}</td>
+            </tr>`;
+        });
+        let te=0, tr=0, tw=0, cw=0, tq=0;
+        fRecs.forEach(r => { te+=r.exam; tr+=r.report; tq+=r.qtd; if(r.wType=='recepcao'){ tw+=r.wait; cw++; }});
+        document.getElementById('stExam').innerText = tq ? Math.round(te/tq/60000)+"m" : "0m";
+        document.getElementById('stReport').innerText = tq ? Math.round(tr/tq/60000)+"m" : "0m";
+        document.getElementById('stWait').innerText = cw ? Math.round(tw/cw/60000)+"m" : "0m";
+    }
+
+    function fmt(ms) { return Math.floor(ms/60000)+':'+Math.floor((ms%60000)/1000).toString().padStart(2,'0'); }
+    function clearAll() { if(confirm("Limpar?")) { records = []; localStorage.setItem('recsV18', '[]'); render(); }}
+    function downloadJSON() { 
+        const a = document.createElement('a');
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records));
+        a.download = "data.json"; a.click();
+    }
+
+    // --- YOUTUBE API ---
+    function onYouTubeIframeAPIReady() {
+        db.ref('config/playlist').once('value').then(s => {
+            const list = s.val();
+            const firstVid = (list && list.length>0) ? list[0] : 'lO4yN8W4A5g';
+            player = new YT.Player('player', {
+                height: '100%', width: '100%', videoId: firstVid,
+                playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1 },
+                events: { 
+                    'onReady': (e)=>{ 
+                        e.target.setVolume(30); 
+                        if(list) e.target.loadPlaylist(list);
+                    },
+                    'onStateChange': (e)=>{ if(e.data===0) e.target.playVideo(); }
+                }
+            });
+        });
+    }
+
+    function unlockAudio() {
+        document.getElementById('unlockBtn').style.display='none';
+        if(player) { player.unMute(); player.setVolume(30); player.playVideo(); }
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance("Sistema Ativo"));
+    }
+
+    function announce(nome, loc) {
+        document.getElementById('tvName').innerText = nome;
+        document.getElementById('tvLoc').innerText = loc;
+        if(player) player.setVolume(5);
+        const msg = new SpeechSynthesisUtterance(`Paciente ${nome}. Sala de Ultrassonografia.`);
+        msg.lang = 'pt-BR'; msg.rate = 0.9;
+        msg.onend = () => { setTimeout(() => { if(player) player.setVolume(30); }, 1000); };
+        window.speechSynthesis.speak(msg);
+    }
+</script>
 </body>
 </html>
