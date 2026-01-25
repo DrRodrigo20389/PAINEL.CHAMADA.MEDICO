@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema V18 - Sincronização Total</title>
+    <title>Sistema V20 - Voz & Layout Ajustados</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
     <style>
         :root {
-            /* DESIGN DARK NEON */
+            /* DARK NEON THEME */
             --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #64748b;
             --blue: #38bdf8; --purple: #c084fc; --orange: #fb923c; --green: #4ade80; --red: #f87171;
             --border: #334155;
@@ -26,7 +26,7 @@
         }
         .choice-btn:hover { background: var(--blue); color: #0f172a; box-shadow: 0 0 30px rgba(56, 189, 248, 0.5); }
 
-        /* LAYOUT MÉDICO */
+        /* DASHBOARD MÉDICO */
         #doctor-area { display: grid; grid-template-rows: auto 1fr; height: 100vh; padding: 15px; gap: 15px; box-sizing: border-box; }
 
         .header-bar { display: flex; justify-content: space-between; align-items: center; }
@@ -36,7 +36,7 @@
 
         .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
 
-        /* TIMER & STATUS */
+        /* TIMER */
         .timer-box { background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 20px; transition: 0.3s; }
         .timer-val { font-size: 5rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
         .timer-lbl { font-size: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; }
@@ -59,40 +59,97 @@
 
         .call-log { text-align: center; color: var(--green); font-size: 0.9rem; padding: 10px; border: 1px dashed var(--border); border-radius: 6px; margin-bottom: 15px; min-height: 20px;}
 
-        /* TABELA E DADOS */
+        /* TABELA */
         .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; text-align: center; }
         .stat-val { font-size: 1.4rem; font-weight: bold; }
         .stat-lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
-
         .table-container { flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
         th { position: sticky; top: 0; background: var(--card); color: var(--muted); padding: 12px; text-align: left; border-bottom: 2px solid var(--border); }
         td { padding: 10px 12px; border-bottom: 1px solid #334155; }
 
-        /* CONTROLE TV */
+        /* TV CONTROLS */
         .tv-controls h4 { margin-top: 0; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .slider { width: 100%; accent-color: var(--blue); }
         .input-link { font-size: 0.85rem; padding: 8px; color: var(--blue); }
 
-        /* TELA TV */
+        /* --- TELA TV (VISUAL AJUSTADO) --- */
         #tv-area { display: grid; grid-template-columns: 50% 50%; height: 100vh; width: 100vw; background: #000; }
-        .tv-sidebar { background: var(--bg); border-left: 3px solid var(--blue); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
-        .tv-status { color: var(--blue); border: 1px solid var(--blue); padding: 8px 30px; border-radius: 50px; font-size: 1.5vw; text-transform: uppercase; letter-spacing: 4px; }
-        .tv-name { font-size: 4vw; font-weight: 900; color: white; margin: 40px 0; line-height: 1.1; animation: pulse 2s infinite; }
-        .tv-loc { margin-top: auto; color: var(--muted); font-size: 1.2vw; }
+        
+        .tv-sidebar { 
+            background: var(--bg); 
+            border-left: 4px solid var(--blue); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; /* Centralização Vertical Perfeita */
+            text-align: center; 
+            padding: 40px; 
+            box-shadow: -20px 0 50px rgba(0,0,0,0.7);
+            position: relative;
+        }
+
+        /* Container interno para agrupar o texto e centralizar melhor */
+        .tv-content-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .tv-status { 
+            color: var(--blue); 
+            border: 2px solid var(--blue); 
+            padding: 10px 40px; 
+            border-radius: 50px; 
+            font-size: 1.5vw; 
+            font-weight: 800;
+            text-transform: uppercase; 
+            letter-spacing: 4px;
+            margin-bottom: 30px;
+        }
+
+        .tv-name { 
+            font-size: 4.5vw; 
+            font-weight: 900; 
+            color: white; 
+            line-height: 1.1; 
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+            animation: pulse 2s infinite; 
+        }
+
+        .tv-room {
+            color: var(--purple);
+            font-size: 1.8vw;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            width: 80%;
+        }
+
+        .tv-loc { 
+            position: absolute; 
+            bottom: 20px; 
+            color: var(--muted); 
+            font-size: 1vw; 
+        }
+
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: 0.9; } }
 
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-content { background: var(--card); padding: 40px; border-radius: 15px; border: 1px solid var(--orange); text-align: center; width: 450px; }
-
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="setup-area">
-        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 40px;">SISTEMA V18 FINAL</h1>
+        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 40px;">SISTEMA V20</h1>
         <button class="choice-btn" onclick="init('medico')">💻 DASHBOARD MÉDICO</button>
         <button class="choice-btn" style="border-color:var(--green); color:var(--green)" onclick="init('tv')">📺 TELA DA RECEPÇÃO</button>
     </div>
@@ -124,7 +181,6 @@
                         <option value="5">5+ Exames</option>
                     </select>
                 </div>
-
                 <div id="ctrl-start">
                     <button onclick="tvChamada()" class="btn-action btn-call">📢 CHAMAR NA TV</button>
                     <div id="lastCallDisplay" class="call-log">...</div>
@@ -169,7 +225,6 @@
                     <input type="text" id="vid2" class="input-link" placeholder="Cole link completo...">
                     <label>LINK VÍDEO 3</label>
                     <input type="text" id="vid3" class="input-link" placeholder="Cole link completo...">
-
                     <button onclick="updatePlaylist()" class="btn-action btn-blue" style="margin-top:15px; font-size: 0.9rem; padding: 12px;">↻ SINCRONIZAR VÍDEOS</button>
                 </div>
             </div>
@@ -181,10 +236,13 @@
             <div id="player"></div>
             <button id="unlockBtn" onclick="unlockAudio()" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); color:white; font-size:1.5rem; border:none; z-index:100; cursor:pointer;">🔊 CLIQUE AQUI PARA INICIAR 🔊</button>
         </div>
+        
         <div class="tv-sidebar">
-            <div class="tv-status">CHAMADA</div>
-            <div class="tv-name" id="tvName">...</div>
-            <div class="tv-status" style="border-color:var(--purple); color:var(--purple); font-size:1.2vw; margin-top:30px;">SALA DE ULTRASSONOGRAFIA</div>
+            <div class="tv-content-box">
+                <div class="tv-status">CHAMADA</div>
+                <div class="tv-name" id="tvName">...</div>
+                <div class="tv-room">SALA DE ULTRASSONOGRAFIA</div>
+            </div>
             <div class="tv-loc" id="tvLoc"></div>
         </div>
     </div>
@@ -200,19 +258,18 @@
     </div>
 
 <script>
-    // FIREBASE
+    // INIT
     const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // VARIAVEIS
+    // VARS
     let mode, player, timerInt, startTime, waitDuration;
     let state = 0; 
     let curRec = {};
-    let records = JSON.parse(localStorage.getItem('recsV18')) || [];
-    let curLoc = localStorage.getItem('locV18') || 'CEMIR LAPÃO';
+    let records = JSON.parse(localStorage.getItem('recsV20')) || [];
+    let curLoc = localStorage.getItem('locV20') || 'CEMIR LAPÃO';
 
-    // REGEX BLINDADO
     function extractVideoID(url) {
         if(!url) return false;
         var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
@@ -229,7 +286,6 @@
             document.getElementById('localSelect').value = curLoc;
             render();
             
-            // CARREGAR CONFIGS DO FIREBASE PARA A TELA DO MEDICO (Memória)
             db.ref('config/volume').on('value', s => { 
                 const v = s.val()||30; 
                 document.getElementById('volInp').value = v; 
@@ -251,7 +307,6 @@
             tag.src = "https://www.youtube.com/iframe_api";
             document.body.appendChild(tag);
             
-            // LISTENERS TV (SINCRONIA)
             db.ref('chamada').on('value', s => { 
                 const d = s.val(); 
                 if(d && (Date.now() - d.t < 60000)) announce(d.nome, d.loc); 
@@ -259,11 +314,9 @@
             
             db.ref('config/volume').on('value', s => { if(player && player.setVolume) player.setVolume(s.val()); });
             
-            // ATUALIZAÇÃO IMEDIATA DA PLAYLIST
             db.ref('config/playlist').on('value', s => { 
                 const list = s.val();
                 if(player && list && list.length > 0 && typeof player.loadPlaylist === 'function') {
-                    console.log("Atualizando playlist na TV:", list);
                     player.loadPlaylist(list);
                     player.setLoop(true);
                 }
@@ -271,24 +324,20 @@
         }
     }
 
-    // --- FUNÇÕES DE SINCRONIA ---
     function updatePlaylist() {
         const v1 = document.getElementById('vid1').value;
         const v2 = document.getElementById('vid2').value;
         const v3 = document.getElementById('vid3').value;
-        
         const id1 = extractVideoID(v1);
         const id2 = extractVideoID(v2);
         const id3 = extractVideoID(v3);
-
         const list = [id1, id2, id3].filter(id => id !== false);
         
         if(list.length > 0) {
-            // SALVA NO MESMO CAMINHO QUE A TV ESCUTA (config/playlist)
             db.ref('config/playlist').set(list);
-            alert("Sincronizado! A TV deve mudar em instantes.");
+            alert("Playlist sincronizada!");
         } else {
-            alert("Cole links válidos do YouTube.");
+            alert("Links inválidos.");
         }
     }
 
@@ -307,7 +356,7 @@
     }
 
     // --- PRODUTIVIDADE ---
-    function updateLocal() { curLoc = document.getElementById('localSelect').value; localStorage.setItem('locV18', curLoc); render(); }
+    function updateLocal() { curLoc = document.getElementById('localSelect').value; localStorage.setItem('locV20', curLoc); render(); }
     
     function timerStart() {
         startTime = Date.now();
@@ -322,12 +371,9 @@
 
     function nextStep() {
         const ui = {
-            lbl: document.getElementById('statusLabel'),
-            box: document.getElementById('timerDisplay'),
-            btnStart: document.getElementById('ctrl-start'),
-            btnProc: document.getElementById('ctrl-proc'),
-            btnEnd: document.getElementById('ctrl-end'),
-            btnWait: document.getElementById('ctrl-wait'),
+            lbl: document.getElementById('statusLabel'), box: document.getElementById('timerDisplay'),
+            btnStart: document.getElementById('ctrl-start'), btnProc: document.getElementById('ctrl-proc'),
+            btnEnd: document.getElementById('ctrl-end'), btnWait: document.getElementById('ctrl-wait'),
             inp: document.getElementById('pName')
         };
 
@@ -344,10 +390,8 @@
             ui.btnProc.classList.add('hidden'); ui.btnEnd.classList.remove('hidden');
             timerStart();
         } else if (state === 2) { 
-            curRec.report = Date.now() - startTime;
-            curRec.name = ui.inp.value;
-            curRec.qtd = parseInt(document.getElementById('pExams').value);
-            curRec.loc = curLoc;
+            curRec.report = Date.now() - startTime; curRec.name = ui.inp.value;
+            curRec.qtd = parseInt(document.getElementById('pExams').value); curRec.loc = curLoc;
             state = 3;
             ui.lbl.innerText = "ESPERA"; ui.box.className = "timer-box mode-wait";
             ui.btnEnd.classList.add('hidden'); ui.btnWait.classList.remove('hidden');
@@ -355,8 +399,7 @@
             document.getElementById('pExams').value = '1';
             timerStart();
         } else if (state === 3) { 
-            waitDuration = Date.now() - startTime;
-            clearInterval(timerInt);
+            waitDuration = Date.now() - startTime; clearInterval(timerInt);
             const m = Math.floor(waitDuration/60000).toString().padStart(2,'0');
             const s = Math.floor((waitDuration%60000)/1000).toString().padStart(2,'0');
             document.getElementById('modalTime').innerText = `${m}:${s}`;
@@ -366,7 +409,7 @@
 
     function endWait(type) {
         curRec.wait = waitDuration; curRec.wType = type;
-        records.push(curRec); localStorage.setItem('recsV18', JSON.stringify(records));
+        records.push(curRec); localStorage.setItem('recsV20', JSON.stringify(records));
         curRec = {}; state = 0;
         document.getElementById('modalWait').style.display = 'none';
         document.getElementById('ctrl-wait').classList.add('hidden');
@@ -398,14 +441,14 @@
     }
 
     function fmt(ms) { return Math.floor(ms/60000)+':'+Math.floor((ms%60000)/1000).toString().padStart(2,'0'); }
-    function clearAll() { if(confirm("Limpar?")) { records = []; localStorage.setItem('recsV18', '[]'); render(); }}
+    function clearAll() { if(confirm("Limpar histórico?")) { records = []; localStorage.setItem('recsV20', '[]'); render(); }}
     function downloadJSON() { 
         const a = document.createElement('a');
         a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records));
-        a.download = "data.json"; a.click();
+        a.download = "dados.json"; a.click();
     }
 
-    // --- YOUTUBE API ---
+    // --- TV API ---
     function onYouTubeIframeAPIReady() {
         db.ref('config/playlist').once('value').then(s => {
             const list = s.val();
@@ -414,10 +457,7 @@
                 height: '100%', width: '100%', videoId: firstVid,
                 playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1 },
                 events: { 
-                    'onReady': (e)=>{ 
-                        e.target.setVolume(30); 
-                        if(list) e.target.loadPlaylist(list);
-                    },
+                    'onReady': (e)=>{ e.target.setVolume(30); if(list) e.target.loadPlaylist(list); },
                     'onStateChange': (e)=>{ if(e.data===0) e.target.playVideo(); }
                 }
             });
@@ -434,8 +474,12 @@
         document.getElementById('tvName').innerText = nome;
         document.getElementById('tvLoc').innerText = loc;
         if(player) player.setVolume(5);
-        const msg = new SpeechSynthesisUtterance(`Paciente ${nome}. Sala de Ultrassonografia.`);
+        
+        // --- NOVA FALA AJUSTADA ---
+        const texto = `Paciente ${nome}, Sala de ultrassonografia. Por gentileza, Paciente ${nome}, dirija-se à Sala de ultrassonografia.`;
+        const msg = new SpeechSynthesisUtterance(texto);
         msg.lang = 'pt-BR'; msg.rate = 0.9;
+        
         msg.onend = () => { setTimeout(() => { if(player) player.setVolume(30); }, 1000); };
         window.speechSynthesis.speak(msg);
     }
