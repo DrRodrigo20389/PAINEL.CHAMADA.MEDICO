@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema V22.4 - Ultrassonografia</title>
+    <title>Sistema V22.5 - Ultrassonografia</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -37,7 +37,7 @@
 
         #central-area { background: rgba(15, 23, 42, 0.5); border: 2px dashed var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 20px; }
 
-        /* TELA TABLET (DARK) */
+        /* TELA TABLET (DARK MODE) */
         #tablet-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: var(--bg); color: var(--text); }
         #qrcode-container { padding: 25px; background: white; border-radius: 20px; margin: 20px auto; }
         .tab-val-display { font-size: 5rem; font-weight: 900; color: var(--green); margin: 0; }
@@ -52,7 +52,7 @@
 <body>
 
     <div id="setup-area">
-        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 20px;">SISTEMA V22.4</h1>
+        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 20px;">SISTEMA V22.5</h1>
         <button class="choice-btn" onclick="init('medico')">💻 DASHBOARD MÉDICO</button>
         <button class="choice-btn" style="border-color:var(--green); color:var(--green)" onclick="init('tv')">📺 TELA DA RECEPÇÃO</button>
         <button class="choice-btn" style="border-color:var(--orange); color:var(--orange)" onclick="init('tablet')">📱 TABLET DE COBRANÇA</button>
@@ -91,12 +91,12 @@
                     </div>
                     <div>
                         <label style="font-size:0.8rem; color:var(--muted)">CÓDIGO PIX (COLE AQUI)</label>
-                        <textarea id="pixCode" rows="5" placeholder="Cole aqui para extrair o valor..." oninput="autoExtrairValor()"></textarea>
+                        <textarea id="pixCode" rows="5" placeholder="Cole aqui..." oninput="autoExtrairValor()"></textarea>
                     </div>
                 </div>
                 <hr style="width:100%; border:0; border-top:1px solid var(--border); margin: 15px 0;">
                 <div style="flex:1; overflow-y:auto;">
-                    <h4 style="margin:0 0 5px 0;">HISTÓRICO DE RECEBIMENTOS</h4>
+                    <h4 style="margin:0 0 5px 0;">HISTÓRICO</h4>
                     <div id="financeLog" style="font-size: 0.85rem;"></div>
                 </div>
             </div>
@@ -105,10 +105,10 @@
                 <h4 style="margin:0 0 10px 0; color:var(--muted)">AJUSTES TV</h4>
                 <label style="font-size:0.7rem">VOLUME TV</label>
                 <input type="range" id="volInp" min="0" max="100" value="30" oninput="setVol(this.value)">
-                <label style="font-size:0.7rem; margin-top:15px;">PLAYLIST YOUTUBE (LINKS)</label>
-                <input type="text" id="vid1" placeholder="Link do Vídeo 1">
-                <input type="text" id="vid2" placeholder="Link do Vídeo 2">
-                <input type="text" id="vid3" placeholder="Link do Vídeo 3">
+                <label style="font-size:0.7rem; margin-top:15px;">LINKS YOUTUBE</label>
+                <input type="text" id="vid1" placeholder="Link 1">
+                <input type="text" id="vid2" placeholder="Link 2">
+                <input type="text" id="vid3" placeholder="Link 3">
                 <button class="btn btn-blue" style="font-size:0.8rem; width:100%" onclick="updatePlaylist()">Sincronizar TV</button>
             </div>
         </div>
@@ -121,31 +121,28 @@
         <div id="pay-msg" class="hidden">
             <h1 id="tabValue" class="tab-val-display">R$ 0,00</h1>
             <div id="qrcode-container"></div>
-            <p style="font-size: 1.5rem; color: var(--blue);">Aponte a câmera do seu banco</p>
+            <p style="font-size: 1.5rem; color: var(--blue);">Pague com o App do seu Banco</p>
         </div>
         <div id="success-msg" class="hidden">
             <div style="font-size: 10rem;">✅</div>
-            <h1 style="color: var(--green); font-size: 3rem;">PAGAMENTO CONFIRMADO</h1>
+            <h1 style="color: var(--green); font-size: 3rem;">PAGAMENTO RECEBIDO</h1>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <div id="player" style="width:100%; height:100%"></div>
+        <div id="player"></div>
         <div class="tv-sidebar">
             <div style="border: 3px solid var(--blue); padding: 30px; border-radius: 30px;">
                 <h2 style="color:var(--blue); letter-spacing:8px;">CHAMADA</h2>
-                <h1 id="tvName" style="font-size: 4vw; margin: 20px 0; text-transform: uppercase;">...</h1>
+                <h1 id="tvName" style="font-size: 5vw; margin: 30px 0; text-transform: uppercase;">...</h1>
                 <h3 style="color:var(--purple)">SALA DE ULTRASSONOGRAFIA</h3>
             </div>
         </div>
-        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; border:none; z-index:9999;">INICIAR TV</button>
+        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; border:none; z-index:9999; font-size: 2rem;">🔊 CLIQUE PARA ATIVAR SISTEMA 🔊</button>
     </div>
 
 <script>
-    const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
     let player, totalAcumulado = 0;
     let curLoc = localStorage.getItem('locV21') || 'CEMIR LAPÃO';
 
@@ -154,11 +151,7 @@
         if (m === 'medico') {
             document.getElementById('doctor-area').classList.remove('hidden');
             document.getElementById('localSelect').value = curLoc;
-            // Carregar total salvo se houver
-            db.ref('financeiro/total').once('value', s => { 
-                totalAcumulado = s.val() || 0;
-                atualizarDisplayTotal();
-            });
+            db.ref('financeiro/total').once('value', s => { totalAcumulado = s.val() || 0; atualizarDisplayTotal(); });
         } else if (m === 'tablet') {
             document.getElementById('tablet-area').classList.remove('hidden');
             ouvirCobrancas();
@@ -168,50 +161,46 @@
         }
     }
 
+    // EXTRAÇÃO AUTOMÁTICA
     function autoExtrairValor() {
         const codigo = document.getElementById('pixCode').value;
         const match = codigo.match(/54\d{2}(\d+\.\d{2})/);
         if (match && match[1]) document.getElementById('pixValue').value = match[1];
     }
 
+    // MÉDICO
     function zerarCaixa() {
-        if(confirm("Deseja realmente ZERAR o total e o histórico de hoje?")) {
-            totalAcumulado = 0;
-            db.ref('financeiro').set({ total: 0 });
-            document.getElementById('financeLog').innerHTML = '';
-            atualizarDisplayTotal();
+        if(confirm("Zerar caixa de hoje?")) {
+            totalAcumulado = 0; db.ref('financeiro').set({ total: 0 });
+            document.getElementById('financeLog').innerHTML = ''; atualizarDisplayTotal();
         }
     }
 
-    function atualizarDisplayTotal() {
-        document.getElementById('totalDia').innerText = `Total: R$ ${totalAcumulado.toFixed(2).replace('.',',')}`;
-    }
+    function atualizarDisplayTotal() { document.getElementById('totalDia').innerText = `Total: R$ ${totalAcumulado.toFixed(2).replace('.',',')}`; }
 
     function confirmarRecebimento() {
-        const valor = parseFloat(document.getElementById('pixValue').value);
-        if(isNaN(valor)) return alert("Valor inválido");
-
+        const valorStr = document.getElementById('pixValue').value;
+        const valor = parseFloat(valorStr);
+        if(isNaN(valor)) return;
         db.ref('cobranca/status').set('pago');
         totalAcumulado += valor;
         db.ref('financeiro/total').set(totalAcumulado);
         atualizarDisplayTotal();
-        
         const log = document.getElementById('financeLog');
         log.innerHTML = `<div style="padding:5px; border-bottom:1px solid var(--border)">R$ ${valor.toFixed(2)} - ${new Date().toLocaleTimeString()}</div>` + log.innerHTML;
-        
         document.getElementById('pixValue').value = ''; document.getElementById('pixCode').value = '';
     }
 
     function enviarParaTablet() {
         const valor = document.getElementById('pixValue').value;
         const codigo = document.getElementById('pixCode').value;
-        if(!valor || !codigo) return alert("Erro: Cole o código PIX!");
+        if(!valor || !codigo) return alert("Dados PIX incompletos!");
         db.ref('cobranca').set({ valor: valor, codigo: codigo, status: 'pendente', t: Date.now() });
     }
 
     function tvChamada() {
         const n = document.getElementById('pName').value;
-        if(n) db.ref('chamada').set({ nome: n, loc: curLoc, t: Date.now() });
+        if(n) db.ref('chamada').set({ nome: n, t: Date.now() });
         document.getElementById('pName').value = '';
     }
 
@@ -225,6 +214,7 @@
         if(ids.length > 0) db.ref('config/playlist').set(ids);
     }
 
+    // TABLET
     function ouvirCobrancas() {
         db.ref('cobranca').on('value', s => {
             const d = s.val(); if(!d) return;
@@ -234,19 +224,16 @@
                 document.getElementById('pay-msg').classList.remove('hidden');
                 document.getElementById('tabValue').innerText = `R$ ${parseFloat(d.valor).toFixed(2).replace('.',',')}`;
                 const container = document.getElementById('qrcode-container');
-                container.innerHTML = '';
-                new QRCode(container, { text: d.codigo, width: 350, height: 350 });
+                container.innerHTML = ''; new QRCode(container, { text: d.codigo, width: 350, height: 350 });
             } else if (d.status === 'pago') {
                 document.getElementById('pay-msg').classList.add('hidden');
                 document.getElementById('success-msg').classList.remove('hidden');
-                setTimeout(() => {
-                    document.getElementById('success-msg').classList.add('hidden');
-                    document.getElementById('idle-msg').classList.remove('hidden');
-                }, 4000);
+                setTimeout(() => { document.getElementById('success-msg').classList.add('hidden'); document.getElementById('idle-msg').classList.remove('hidden'); }, 4000);
             }
         });
     }
 
+    // TV
     function initTV() {
         var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
         document.body.appendChild(tag);
@@ -254,8 +241,11 @@
             const d = s.val();
             if(d && (Date.now() - d.t < 60000)) {
                 document.getElementById('tvName').innerText = d.nome;
-                const ut = new SpeechSynthesisUtterance(`Paciente ${d.nome}, Sala de ultrassonografia.`);
-                ut.lang = 'pt-BR'; window.speechSynthesis.speak(ut);
+                if(player) player.setVolume(10); // Abaixa som do vídeo
+                const ut = new SpeechSynthesisUtterance(`Paciente ${d.nome}, Sala de ultrassonografia. Por gentileza, paciente ${d.nome}, queira se dirigir à sala de ultrassonografia.`);
+                ut.lang = 'pt-BR';
+                ut.onend = () => { if(player) player.setVolume(db.ref('config/volume').val() || 30); };
+                window.speechSynthesis.speak(ut);
             }
         });
         db.ref('config/volume').on('value', s => { if(player) player.setVolume(s.val()||30); });
@@ -274,7 +264,14 @@
     }
 
     function setVol(v) { db.ref('config/volume').set(parseInt(v)); }
-    function unlockAudio() { document.getElementById('unlockBtn').style.display='none'; if(player) player.unMute(); }
+    function unlockAudio() { 
+        document.getElementById('unlockBtn').style.display='none'; 
+        if(player) {
+            player.unMute();
+            player.setVolume(30);
+            player.playVideo();
+        } 
+    }
     function updateLocal() { curLoc = document.getElementById('localSelect').value; localStorage.setItem('locV21', curLoc); }
 </script>
 </body>
