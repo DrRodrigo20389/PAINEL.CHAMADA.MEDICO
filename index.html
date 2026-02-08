@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema V21 - Layout Compacto</title>
+    <title>Sistema V22.4 - Ultrassonografia</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         :root {
@@ -14,408 +15,267 @@
             --border: #334155;
         }
         
-        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
 
         /* TELA DE ESCOLHA */
-        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; z-index: 1000; position: relative; background: var(--bg); }
-        .choice-btn { 
-            width: 320px; padding: 25px; margin: 15px; font-size: 1.2rem; cursor: pointer; border-radius: 12px; 
-            border: 2px solid var(--blue); font-weight: bold; background: transparent; color: var(--blue);
-            transition: 0.3s; box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
-        }
-        .choice-btn:hover { background: var(--blue); color: #0f172a; box-shadow: 0 0 30px rgba(56, 189, 248, 0.5); }
+        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; }
+        .choice-btn { width: 350px; padding: 20px; font-size: 1.1rem; cursor: pointer; border-radius: 12px; border: 2px solid var(--blue); background: transparent; color: var(--blue); font-weight: bold; transition: 0.3s; }
+        .choice-btn:hover { background: var(--blue); color: #0f172a; }
 
         /* DASHBOARD MÉDICO */
         #doctor-area { display: grid; grid-template-rows: auto 1fr; height: 100vh; padding: 10px; gap: 10px; box-sizing: border-box; }
-
-        .header-bar { display: flex; justify-content: space-between; align-items: center; }
-        .location-select { background: var(--card); color: var(--green); border: 1px solid var(--border); padding: 8px; border-radius: 6px; font-weight: bold; font-size: 1rem; }
-
-        .dashboard-grid { display: grid; grid-template-columns: 350px 1fr 320px; gap: 10px; height: 100%; overflow: hidden; }
-
-        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; }
-
-        /* TIMER (Reduzido para caber melhor) */
-        .timer-box { background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 15px; transition: 0.3s; }
-        .timer-val { font-size: 4rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-        .timer-lbl { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+        .dashboard-grid { display: grid; grid-template-columns: 320px 1fr 300px; gap: 10px; height: 100%; overflow: hidden; }
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; }
         
-        .mode-idle { border-color: var(--border); }
-        .mode-exam { border-color: var(--blue); color: var(--blue); background: radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%); }
-        .mode-laudo { border-color: var(--purple); color: var(--purple); background: radial-gradient(circle, rgba(192,132,252,0.1) 0%, transparent 70%); }
-        .mode-wait { border-color: var(--orange); color: var(--orange); background: radial-gradient(circle, rgba(251,146,60,0.1) 0%, transparent 70%); }
-
-        .input-group { margin-bottom: 10px; }
-        input[type="text"], select { width: 100%; background: #0f172a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; box-sizing: border-box; margin-bottom: 5px; font-size: 0.95rem; outline: none; }
-        input:focus { border-color: var(--blue); }
-
-        /* BOTÕES MAIS COMPACTOS */
-        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 1rem; margin-bottom: 8px; text-transform: uppercase; transition: 0.2s; color: #0f172a; }
-        .btn-action:hover { filter: brightness(1.1); }
+        input, textarea { background: #0f172a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 0.9rem;}
         
-        .btn-call { background: transparent; border: 2px solid var(--green); color: var(--green); }
-        .btn-call:hover { background: rgba(74, 222, 128, 0.1); color: var(--green); }
-        .btn-blue { background: var(--blue); } .btn-purple { background: var(--purple); } .btn-orange { background: var(--orange); } .btn-green { background: var(--green); }
+        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; margin-bottom: 5px; }
+        .btn-green { background: var(--green); color: #064e3b; }
+        .btn-blue { background: var(--blue); color: #0c4a6e; }
+        .btn-red { background: var(--red); color: white; margin-top: 5px; font-size: 0.7rem; padding: 8px; }
+        .btn-outline { background: transparent; border: 2px solid var(--green); color: var(--green); }
 
-        .call-log { text-align: center; color: var(--green); font-size: 0.8rem; padding: 5px; border: 1px dashed var(--border); border-radius: 6px; margin-bottom: 10px; min-height: 18px;}
+        #central-area { background: rgba(15, 23, 42, 0.5); border: 2px dashed var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 20px; }
 
-        /* TABELA */
-        .stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        .stat-box { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; text-align: center; }
-        .stat-val { font-size: 1.2rem; font-weight: bold; }
-        .stat-lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; }
-        .table-container { flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th { position: sticky; top: 0; background: var(--card); color: var(--muted); padding: 10px; text-align: left; border-bottom: 2px solid var(--border); }
-        td { padding: 8px 10px; border-bottom: 1px solid #334155; }
+        /* TELA TABLET (DARK) */
+        #tablet-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: var(--bg); color: var(--text); }
+        #qrcode-container { padding: 25px; background: white; border-radius: 20px; margin: 20px auto; }
+        .tab-val-display { font-size: 5rem; font-weight: 900; color: var(--green); margin: 0; }
+        
+        /* TELA RECEPÇÃO */
+        #tv-area { display: grid; grid-template-columns: 60% 40%; height: 100vh; background: #000; }
+        .tv-sidebar { background: var(--bg); border-left: 4px solid var(--blue); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; color: white; }
 
-        /* TV CONTROLS */
-        .tv-controls h4 { margin-top: 0; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 5px; font-size: 0.9rem; }
-        .slider { width: 100%; accent-color: var(--blue); }
-        .input-link { font-size: 0.8rem; padding: 8px; color: var(--blue); margin-bottom: 2px; }
-        label { font-size: 0.75rem; color: var(--muted); margin-top: 5px; display: block;}
-
-        /* --- TELA TV --- */
-        #tv-area { display: grid; grid-template-columns: 50% 50%; height: 100vh; width: 100vw; background: #000; }
-        .tv-sidebar { background: var(--bg); border-left: 4px solid var(--blue); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; box-shadow: -20px 0 50px rgba(0,0,0,0.7); position: relative; }
-        .tv-content-box { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
-        .tv-status { color: var(--blue); border: 2px solid var(--blue); padding: 10px 40px; border-radius: 50px; font-size: 1.5vw; font-weight: 800; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 30px; }
-        .tv-name { font-size: 4.5vw; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 30px; text-shadow: 0 0 30px rgba(56, 189, 248, 0.4); animation: pulse 2s infinite; }
-        .tv-room { color: var(--purple); font-size: 1.8vw; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border-top: 1px solid var(--border); padding-top: 20px; width: 80%; }
-        .tv-loc { position: absolute; bottom: 20px; color: var(--muted); font-size: 1vw; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: 0.9; } }
-
-        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-content { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid var(--orange); text-align: center; width: 400px; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="setup-area">
-        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 40px;">SISTEMA V21 COMPACTO</h1>
+        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 20px;">SISTEMA V22.4</h1>
         <button class="choice-btn" onclick="init('medico')">💻 DASHBOARD MÉDICO</button>
         <button class="choice-btn" style="border-color:var(--green); color:var(--green)" onclick="init('tv')">📺 TELA DA RECEPÇÃO</button>
+        <button class="choice-btn" style="border-color:var(--orange); color:var(--orange)" onclick="init('tablet')">📱 TABLET DE COBRANÇA</button>
     </div>
 
     <div id="doctor-area" class="hidden">
-        <div class="header-bar">
-            <h3 style="margin:0; color:var(--muted); text-transform: uppercase; font-size: 1rem;">Painel de Controle</h3>
-            <select id="localSelect" class="location-select" onchange="updateLocal()">
+        <div style="display:flex; justify-content: space-between; align-items: flex-start;">
+            <select id="localSelect" style="width: auto; margin:0;" onchange="updateLocal()">
                 <option>CEMIR LAPÃO</option>
                 <option>CEMIR AMÉRICA DOURADA</option>
                 <option>CEMIR CANARANA</option>
                 <option>DILAB BARRA DO MENDES</option>
             </select>
+            <div style="text-align: right;">
+                <div id="totalDia" style="background:var(--green); color:#064e3b; padding:8px 20px; border-radius:20px; font-weight:bold; font-size: 1.2rem;">Total: R$ 0,00</div>
+                <button class="btn btn-red" onclick="zerarCaixa()">⚠️ ZERAR CAIXA DO DIA</button>
+            </div>
         </div>
-
+        
         <div class="dashboard-grid">
             <div class="panel">
-                <div id="timerDisplay" class="timer-box mode-idle">
-                    <div class="timer-lbl" id="statusLabel">AGUARDANDO</div>
-                    <div class="timer-val" id="timer">00:00</div>
+                <h4 style="margin:0 0 10px 0; color:var(--muted)">CHAMADA TV</h4>
+                <input type="text" id="pName" placeholder="Nome do Paciente">
+                <button class="btn btn-outline" onclick="tvChamada()">📢 CHAMAR AGORA</button>
+                <div id="lastCall" style="margin-top:10px; font-size: 0.8rem; color: var(--blue); text-align:center;"></div>
+            </div>
+
+            <div id="central-area">
+                <h2 style="margin-top:0; color:var(--orange)">COBRANÇA PIX</h2>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
+                    <div>
+                        <label style="font-size:0.8rem; color:var(--muted)">VALOR R$</label>
+                        <input type="text" id="pixValue" placeholder="0.00">
+                        <button class="btn btn-blue" style="width:100%" onclick="enviarParaTablet()">📲 ENVIAR TABLET</button>
+                        <button class="btn btn-green" style="width:100%" onclick="confirmarRecebimento()">✅ CONFIRMAR</button>
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; color:var(--muted)">CÓDIGO PIX (COLE AQUI)</label>
+                        <textarea id="pixCode" rows="5" placeholder="Cole aqui para extrair o valor..." oninput="autoExtrairValor()"></textarea>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <input type="text" id="pName" placeholder="Nome do Paciente..." autocomplete="off">
-                    <select id="pExams">
-                        <option value="1">1 Exame</option>
-                        <option value="2">2 Exames</option>
-                        <option value="3">3 Exames</option>
-                        <option value="4">4 Exames</option>
-                        <option value="5">5+ Exames</option>
-                    </select>
-                </div>
-                <div id="ctrl-start">
-                    <button onclick="tvChamada()" class="btn-action btn-call">📢 CHAMAR NA TV</button>
-                    <div id="lastCallDisplay" class="call-log">...</div>
-                    <button onclick="nextStep()" class="btn-action btn-blue">▶ INICIAR ATENDIMENTO</button>
-                </div>
-                <button id="ctrl-proc" onclick="nextStep()" class="btn-action btn-purple hidden">⏹ PACIENTE SAIU / LAUDAR</button>
-                <button id="ctrl-end" onclick="nextStep()" class="btn-action btn-green hidden">✔ FINALIZAR / SALA VAZIA</button>
-                <div id="ctrl-wait" class="hidden">
-                    <button onclick="tvChamada()" class="btn-action btn-call">📢 CHAMAR PRÓXIMO</button>
-                    <div id="lastCallDisplayWait" class="call-log">...</div>
-                    <button onclick="nextStep()" class="btn-action btn-orange">⌛ PACIENTE ENTROU</button>
+                <hr style="width:100%; border:0; border-top:1px solid var(--border); margin: 15px 0;">
+                <div style="flex:1; overflow-y:auto;">
+                    <h4 style="margin:0 0 5px 0;">HISTÓRICO DE RECEBIMENTOS</h4>
+                    <div id="financeLog" style="font-size: 0.85rem;"></div>
                 </div>
             </div>
 
             <div class="panel">
-                <div class="stats-bar">
-                    <div class="stat-box"><div class="stat-val" id="stExam" style="color:var(--blue)">0m</div><div class="stat-lbl">Exame</div></div>
-                    <div class="stat-box"><div class="stat-val" id="stReport" style="color:var(--purple)">0m</div><div class="stat-lbl">Laudo</div></div>
-                    <div class="stat-box"><div class="stat-val" id="stWait" style="color:var(--orange)">0m</div><div class="stat-lbl">Espera</div></div>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>Paciente</th><th>Qtd</th><th>Exame</th><th>Laudo</th><th>Espera</th></tr></thead>
-                        <tbody id="logBody"></tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 10px; display: flex; gap: 5px;">
-                    <button onclick="downloadJSON()" style="flex:1; padding:10px; background:var(--card); border:1px solid var(--green); color:var(--green); border-radius:6px; cursor:pointer;">💾 EXPORTAR</button>
-                    <button onclick="clearAll()" style="padding:10px; background:var(--card); border:1px solid var(--red); color:var(--red); border-radius:6px; cursor:pointer;">🗑</button>
-                </div>
+                <h4 style="margin:0 0 10px 0; color:var(--muted)">AJUSTES TV</h4>
+                <label style="font-size:0.7rem">VOLUME TV</label>
+                <input type="range" id="volInp" min="0" max="100" value="30" oninput="setVol(this.value)">
+                <label style="font-size:0.7rem; margin-top:15px;">PLAYLIST YOUTUBE (LINKS)</label>
+                <input type="text" id="vid1" placeholder="Link do Vídeo 1">
+                <input type="text" id="vid2" placeholder="Link do Vídeo 2">
+                <input type="text" id="vid3" placeholder="Link do Vídeo 3">
+                <button class="btn btn-blue" style="font-size:0.8rem; width:100%" onclick="updatePlaylist()">Sincronizar TV</button>
             </div>
+        </div>
+    </div>
 
-            <div class="panel tv-controls">
-                <h4>CONTROLE TV</h4>
-                <label>VOLUME TV: <span id="volDisp" style="color:white; font-weight:bold;">30</span>%</label>
-                <input type="range" class="slider" id="volInp" min="0" max="100" value="30" oninput="setVol(this.value)">
-
-                <div style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 5px;">
-                    <label>LINK VÍDEO 1</label>
-                    <input type="text" id="vid1" class="input-link" placeholder="Cole link completo...">
-                    <label>LINK VÍDEO 2</label>
-                    <input type="text" id="vid2" class="input-link" placeholder="Cole link completo...">
-                    <label>LINK VÍDEO 3</label>
-                    <input type="text" id="vid3" class="input-link" placeholder="Cole link completo...">
-                    <button onclick="updatePlaylist()" class="btn-action btn-blue" style="margin-top:10px; font-size: 0.8rem; padding: 10px;">↻ SINCRONIZAR VÍDEOS</button>
-                </div>
-            </div>
+    <div id="tablet-area" class="hidden">
+        <div id="idle-msg">
+            <h1 style="font-size: 3rem; color: var(--muted);">Aguardando...</h1>
+        </div>
+        <div id="pay-msg" class="hidden">
+            <h1 id="tabValue" class="tab-val-display">R$ 0,00</h1>
+            <div id="qrcode-container"></div>
+            <p style="font-size: 1.5rem; color: var(--blue);">Aponte a câmera do seu banco</p>
+        </div>
+        <div id="success-msg" class="hidden">
+            <div style="font-size: 10rem;">✅</div>
+            <h1 style="color: var(--green); font-size: 3rem;">PAGAMENTO CONFIRMADO</h1>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <div style="position:relative; width:100%; height:100%;">
-            <div id="player"></div>
-            <button id="unlockBtn" onclick="unlockAudio()" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); color:white; font-size:1.5rem; border:none; z-index:100; cursor:pointer;">🔊 CLIQUE AQUI PARA INICIAR 🔊</button>
-        </div>
+        <div id="player" style="width:100%; height:100%"></div>
         <div class="tv-sidebar">
-            <div class="tv-content-box">
-                <div class="tv-status">CHAMADA</div>
-                <div class="tv-name" id="tvName">...</div>
-                <div class="tv-room">SALA DE ULTRASSONOGRAFIA</div>
+            <div style="border: 3px solid var(--blue); padding: 30px; border-radius: 30px;">
+                <h2 style="color:var(--blue); letter-spacing:8px;">CHAMADA</h2>
+                <h1 id="tvName" style="font-size: 4vw; margin: 20px 0; text-transform: uppercase;">...</h1>
+                <h3 style="color:var(--purple)">SALA DE ULTRASSONOGRAFIA</h3>
             </div>
-            <div class="tv-loc" id="tvLoc"></div>
         </div>
-    </div>
-
-    <div id="modalWait" class="modal">
-        <div class="modal-content">
-            <h2 style="color:var(--orange); margin-top:0;">FIM DO INTERVALO</h2>
-            <p style="color:var(--muted); margin-bottom: 5px;">Tempo Parado:</p>
-            <div style="font-size: 3rem; font-weight: bold; color: white; margin-bottom: 30px;" id="modalTime">00:00</div>
-            <button class="btn-action btn-orange" onclick="endWait('recepcao')">🏢 DEMORA RECEPÇÃO</button>
-            <button class="btn-action" style="background:transparent; border:1px solid var(--muted); color:white; margin-top: 10px;" onclick="endWait('pausa')">☕ MINHA PAUSA</button>
-        </div>
+        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; border:none; z-index:9999;">INICIAR TV</button>
     </div>
 
 <script>
-    // INIT
     const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // VARS
-    let mode, player, timerInt, startTime, waitDuration;
-    let state = 0; 
-    let curRec = {};
-    let records = JSON.parse(localStorage.getItem('recsV21')) || [];
+    let player, totalAcumulado = 0;
     let curLoc = localStorage.getItem('locV21') || 'CEMIR LAPÃO';
 
-    function extractVideoID(url) {
-        if(!url) return false;
-        var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-        var match = url.match(regExp);
-        return (match && match[7].length == 11) ? match[7] : false;
-    }
-
     function init(m) {
-        mode = m;
         document.getElementById('setup-area').classList.add('hidden');
         if (m === 'medico') {
             document.getElementById('doctor-area').classList.remove('hidden');
             document.getElementById('localSelect').value = curLoc;
-            render();
-            db.ref('config/volume').on('value', s => { 
-                const v = s.val()||30; 
-                document.getElementById('volInp').value = v; 
-                document.getElementById('volDisp').innerText = v; 
+            // Carregar total salvo se houver
+            db.ref('financeiro/total').once('value', s => { 
+                totalAcumulado = s.val() || 0;
+                atualizarDisplayTotal();
             });
-            db.ref('config/playlist').once('value', s => {
-                const list = s.val();
-                if(list) {
-                    if(list[0]) document.getElementById('vid1').value = "https://youtube.com/watch?v=" + list[0];
-                    if(list[1]) document.getElementById('vid2').value = "https://youtube.com/watch?v=" + list[1];
-                    if(list[2]) document.getElementById('vid3').value = "https://youtube.com/watch?v=" + list[2];
-                }
-            });
-        } else {
+        } else if (m === 'tablet') {
+            document.getElementById('tablet-area').classList.remove('hidden');
+            ouvirCobrancas();
+        } else if (m === 'tv') {
             document.getElementById('tv-area').classList.remove('hidden');
-            var tag = document.createElement('script'); 
-            tag.src = "https://www.youtube.com/iframe_api";
-            document.body.appendChild(tag);
-            db.ref('chamada').on('value', s => { 
-                const d = s.val(); 
-                if(d && (Date.now() - d.t < 60000)) announce(d.nome, d.loc); 
-            });
-            db.ref('config/volume').on('value', s => { if(player && player.setVolume) player.setVolume(s.val()); });
-            db.ref('config/playlist').on('value', s => { 
-                const list = s.val();
-                if(player && list && list.length > 0 && typeof player.loadPlaylist === 'function') {
-                    player.loadPlaylist(list);
-                    player.setLoop(true);
-                }
-            });
+            initTV();
         }
     }
 
-    function updatePlaylist() {
-        const v1 = document.getElementById('vid1').value;
-        const v2 = document.getElementById('vid2').value;
-        const v3 = document.getElementById('vid3').value;
-        const id1 = extractVideoID(v1);
-        const id2 = extractVideoID(v2);
-        const id3 = extractVideoID(v3);
-        const list = [id1, id2, id3].filter(id => id !== false);
-        if(list.length > 0) {
-            db.ref('config/playlist').set(list);
-            alert("Sincronizado!");
-        } else {
-            alert("Links inválidos.");
+    function autoExtrairValor() {
+        const codigo = document.getElementById('pixCode').value;
+        const match = codigo.match(/54\d{2}(\d+\.\d{2})/);
+        if (match && match[1]) document.getElementById('pixValue').value = match[1];
+    }
+
+    function zerarCaixa() {
+        if(confirm("Deseja realmente ZERAR o total e o histórico de hoje?")) {
+            totalAcumulado = 0;
+            db.ref('financeiro').set({ total: 0 });
+            document.getElementById('financeLog').innerHTML = '';
+            atualizarDisplayTotal();
         }
+    }
+
+    function atualizarDisplayTotal() {
+        document.getElementById('totalDia').innerText = `Total: R$ ${totalAcumulado.toFixed(2).replace('.',',')}`;
+    }
+
+    function confirmarRecebimento() {
+        const valor = parseFloat(document.getElementById('pixValue').value);
+        if(isNaN(valor)) return alert("Valor inválido");
+
+        db.ref('cobranca/status').set('pago');
+        totalAcumulado += valor;
+        db.ref('financeiro/total').set(totalAcumulado);
+        atualizarDisplayTotal();
+        
+        const log = document.getElementById('financeLog');
+        log.innerHTML = `<div style="padding:5px; border-bottom:1px solid var(--border)">R$ ${valor.toFixed(2)} - ${new Date().toLocaleTimeString()}</div>` + log.innerHTML;
+        
+        document.getElementById('pixValue').value = ''; document.getElementById('pixCode').value = '';
+    }
+
+    function enviarParaTablet() {
+        const valor = document.getElementById('pixValue').value;
+        const codigo = document.getElementById('pixCode').value;
+        if(!valor || !codigo) return alert("Erro: Cole o código PIX!");
+        db.ref('cobranca').set({ valor: valor, codigo: codigo, status: 'pendente', t: Date.now() });
     }
 
     function tvChamada() {
         const n = document.getElementById('pName').value;
-        if(!n) return alert("Digite o nome!");
-        db.ref('chamada').set({ nome: n, loc: curLoc, t: Date.now() });
-        const txt = `CHAMOU: ${n.toUpperCase()} (${new Date().toLocaleTimeString().slice(0,5)})`;
-        document.getElementById('lastCallDisplay').innerText = txt;
-        document.getElementById('lastCallDisplayWait').innerText = txt;
+        if(n) db.ref('chamada').set({ nome: n, loc: curLoc, t: Date.now() });
+        document.getElementById('pName').value = '';
     }
 
-    function setVol(v) { 
-        db.ref('config/volume').set(parseInt(v)); 
-        document.getElementById('volDisp').innerText = v; 
-    }
-
-    function updateLocal() { curLoc = document.getElementById('localSelect').value; localStorage.setItem('locV21', curLoc); render(); }
-    
-    function timerStart() {
-        startTime = Date.now();
-        clearInterval(timerInt);
-        timerInt = setInterval(() => {
-            const diff = Date.now() - startTime;
-            const m = Math.floor(diff/60000).toString().padStart(2,'0');
-            const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
-            document.getElementById('timer').innerText = `${m}:${s}`;
-        }, 1000);
-    }
-
-    function nextStep() {
-        const ui = {
-            lbl: document.getElementById('statusLabel'), box: document.getElementById('timerDisplay'),
-            btnStart: document.getElementById('ctrl-start'), btnProc: document.getElementById('ctrl-proc'),
-            btnEnd: document.getElementById('ctrl-end'), btnWait: document.getElementById('ctrl-wait'),
-            inp: document.getElementById('pName')
+    function updatePlaylist() {
+        const extractID = (url) => {
+            var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            var match = url.match(regExp);
+            return (match && match[7].length == 11) ? match[7] : false;
         };
-
-        if(state === 0) { 
-            if(!ui.inp.value && !confirm("Sem nome?")) return;
-            state = 1; ui.inp.disabled = true;
-            ui.lbl.innerText = "EM EXAME"; ui.box.className = "timer-box mode-exam";
-            ui.btnStart.classList.add('hidden'); ui.btnProc.classList.remove('hidden');
-            timerStart();
-        } else if (state === 1) { 
-            curRec.exam = Date.now() - startTime;
-            state = 2;
-            ui.lbl.innerText = "LAUDO"; ui.box.className = "timer-box mode-laudo";
-            ui.btnProc.classList.add('hidden'); ui.btnEnd.classList.remove('hidden');
-            timerStart();
-        } else if (state === 2) { 
-            curRec.report = Date.now() - startTime; curRec.name = ui.inp.value;
-            curRec.qtd = parseInt(document.getElementById('pExams').value); curRec.loc = curLoc;
-            state = 3;
-            ui.lbl.innerText = "ESPERA"; ui.box.className = "timer-box mode-wait";
-            ui.btnEnd.classList.add('hidden'); ui.btnWait.classList.remove('hidden');
-            ui.inp.value = ''; ui.inp.disabled = false; ui.inp.focus();
-            document.getElementById('pExams').value = '1';
-            timerStart();
-        } else if (state === 3) { 
-            waitDuration = Date.now() - startTime; clearInterval(timerInt);
-            const m = Math.floor(waitDuration/60000).toString().padStart(2,'0');
-            const s = Math.floor((waitDuration%60000)/1000).toString().padStart(2,'0');
-            document.getElementById('modalTime').innerText = `${m}:${s}`;
-            document.getElementById('modalWait').style.display = 'flex';
-        }
+        const ids = [extractID(document.getElementById('vid1').value), extractID(document.getElementById('vid2').value), extractID(document.getElementById('vid3').value)].filter(id => id !== false);
+        if(ids.length > 0) db.ref('config/playlist').set(ids);
     }
 
-    function endWait(type) {
-        curRec.wait = waitDuration; curRec.wType = type;
-        records.push(curRec); localStorage.setItem('recsV21', JSON.stringify(records));
-        curRec = {}; state = 0;
-        document.getElementById('modalWait').style.display = 'none';
-        document.getElementById('ctrl-wait').classList.add('hidden');
-        document.getElementById('ctrl-start').classList.remove('hidden');
-        document.getElementById('statusLabel').innerText = "AGUARDANDO";
-        document.getElementById('timerDisplay').className = "timer-box mode-idle";
-        document.getElementById('timer').innerText = "00:00";
-        document.getElementById('lastCallDisplay').innerText = "...";
-        render();
-    }
-
-    function render() {
-        const tbody = document.getElementById('logBody'); tbody.innerHTML = '';
-        const fRecs = records.filter(r => r.loc === curLoc);
-        [...fRecs].reverse().forEach(r => {
-            tbody.innerHTML += `<tr>
-                <td style="font-weight:bold; color:white;">${r.name}</td>
-                <td style="text-align:center">${r.qtd}</td>
-                <td style="color:var(--blue)">${fmt(r.exam)}</td>
-                <td style="color:var(--purple)">${fmt(r.report)}</td>
-                <td style="color:${r.wType=='recepcao'?'var(--orange)':'#555'}">${fmt(r.wait)}</td>
-            </tr>`;
+    function ouvirCobrancas() {
+        db.ref('cobranca').on('value', s => {
+            const d = s.val(); if(!d) return;
+            if(d.status === 'pendente') {
+                document.getElementById('idle-msg').classList.add('hidden');
+                document.getElementById('success-msg').classList.add('hidden');
+                document.getElementById('pay-msg').classList.remove('hidden');
+                document.getElementById('tabValue').innerText = `R$ ${parseFloat(d.valor).toFixed(2).replace('.',',')}`;
+                const container = document.getElementById('qrcode-container');
+                container.innerHTML = '';
+                new QRCode(container, { text: d.codigo, width: 350, height: 350 });
+            } else if (d.status === 'pago') {
+                document.getElementById('pay-msg').classList.add('hidden');
+                document.getElementById('success-msg').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('success-msg').classList.add('hidden');
+                    document.getElementById('idle-msg').classList.remove('hidden');
+                }, 4000);
+            }
         });
-        let te=0, tr=0, tw=0, cw=0, tq=0;
-        fRecs.forEach(r => { te+=r.exam; tr+=r.report; tq+=r.qtd; if(r.wType=='recepcao'){ tw+=r.wait; cw++; }});
-        document.getElementById('stExam').innerText = tq ? Math.round(te/tq/60000)+"m" : "0m";
-        document.getElementById('stReport').innerText = tq ? Math.round(tr/tq/60000)+"m" : "0m";
-        document.getElementById('stWait').innerText = cw ? Math.round(tw/cw/60000)+"m" : "0m";
     }
 
-    function fmt(ms) { return Math.floor(ms/60000)+':'+Math.floor((ms%60000)/1000).toString().padStart(2,'0'); }
-    function clearAll() { if(confirm("Limpar histórico?")) { records = []; localStorage.setItem('recsV21', '[]'); render(); }}
-    function downloadJSON() { 
-        const a = document.createElement('a');
-        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records));
-        a.download = "dados.json"; a.click();
+    function initTV() {
+        var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+        db.ref('chamada').on('value', s => {
+            const d = s.val();
+            if(d && (Date.now() - d.t < 60000)) {
+                document.getElementById('tvName').innerText = d.nome;
+                const ut = new SpeechSynthesisUtterance(`Paciente ${d.nome}, Sala de ultrassonografia.`);
+                ut.lang = 'pt-BR'; window.speechSynthesis.speak(ut);
+            }
+        });
+        db.ref('config/volume').on('value', s => { if(player) player.setVolume(s.val()||30); });
+        db.ref('config/playlist').on('value', s => { if(player && s.val()) player.loadPlaylist(s.val()); });
     }
 
-    // --- TV API ---
     function onYouTubeIframeAPIReady() {
         db.ref('config/playlist').once('value').then(s => {
-            const list = s.val();
-            const firstVid = (list && list.length>0) ? list[0] : 'lO4yN8W4A5g';
+            const list = s.val() || ['6mK8shfTegE'];
             player = new YT.Player('player', {
-                height: '100%', width: '100%', videoId: firstVid,
-                playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1 },
-                events: { 
-                    'onReady': (e)=>{ e.target.setVolume(30); if(list) e.target.loadPlaylist(list); },
-                    'onStateChange': (e)=>{ if(e.data===0) e.target.playVideo(); }
-                }
+                height: '100%', width: '100%',
+                playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1, 'playlist': list.join(',') },
+                events: { 'onReady': (e) => { e.target.playVideo(); } }
             });
         });
     }
 
-    function unlockAudio() {
-        document.getElementById('unlockBtn').style.display='none';
-        if(player) { player.unMute(); player.setVolume(30); player.playVideo(); }
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("Sistema Ativo"));
-    }
-
-    function announce(nome, loc) {
-        document.getElementById('tvName').innerText = nome;
-        document.getElementById('tvLoc').innerText = loc;
-        if(player) player.setVolume(5);
-        
-        const texto = `Paciente ${nome}, Sala de ultrassonografia. Por gentileza, Paciente ${nome}, dirija-se à Sala de ultrassonografia.`;
-        const msg = new SpeechSynthesisUtterance(texto);
-        msg.lang = 'pt-BR'; msg.rate = 0.9;
-        
-        msg.onend = () => { setTimeout(() => { if(player) player.setVolume(30); }, 1000); };
-        window.speechSynthesis.speak(msg);
-    }
+    function setVol(v) { db.ref('config/volume').set(parseInt(v)); }
+    function unlockAudio() { document.getElementById('unlockBtn').style.display='none'; if(player) player.unMute(); }
+    function updateLocal() { curLoc = document.getElementById('localSelect').value; localStorage.setItem('locV21', curLoc); }
 </script>
 </body>
 </html>
