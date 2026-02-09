@@ -1,136 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema V22.7 - Ultrassonografia</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <style>
-        :root {
-            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #64748b;
-            --blue: #38bdf8; --purple: #c084fc; --orange: #fb923c; --green: #4ade80; --red: #f87171;
-            --border: #334155;
-        }
-        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-        
-        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; }
-        .choice-btn { width: 350px; padding: 20px; font-size: 1.1rem; cursor: pointer; border-radius: 12px; border: 2px solid var(--blue); background: transparent; color: var(--blue); font-weight: bold; transition: 0.3s; }
-        .choice-btn:hover { background: var(--blue); color: #0f172a; }
-
-        /* DASHBOARD MÉDICO */
-        #doctor-area { display: grid; grid-template-rows: auto 1fr; height: 100vh; padding: 10px; gap: 10px; box-sizing: border-box; }
-        .dashboard-grid { display: grid; grid-template-columns: 320px 1fr 300px; gap: 10px; height: 100%; overflow: hidden; }
-        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; }
-        
-        input, textarea { background: #0f172a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 0.9rem;}
-        
-        .btn { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; margin-bottom: 5px; }
-        .btn-green { background: var(--green); color: #064e3b; }
-        .btn-blue { background: var(--blue); color: #0c4a6e; }
-        .btn-red { background: var(--red); color: white; margin-top: 5px; font-size: 0.7rem; padding: 8px; }
-        .btn-outline { background: transparent; border: 2px solid var(--green); color: var(--green); }
-
-        #central-area { background: rgba(15, 23, 42, 0.5); border: 2px dashed var(--border); border-radius: 12px; display: flex; flex-direction: column; padding: 20px; }
-
-        /* TABLET (DARK) */
-        #tablet-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; background: var(--bg); color: var(--text); }
-        #qrcode-container { padding: 25px; background: white; border-radius: 20px; margin: 20px auto; }
-        .tab-val-display { font-size: 5rem; font-weight: 900; color: var(--green); margin: 0; }
-        
-        /* TV */
-        #tv-area { display: grid; grid-template-columns: 60% 40%; height: 100vh; background: #000; }
-        .tv-sidebar { background: var(--bg); border-left: 4px solid var(--blue); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; color: white; }
-
-        .hidden { display: none !important; }
-    </style>
-</head>
-<body>
-
-    <div id="setup-area">
-        <h1 style="color:white; letter-spacing: 5px; margin-bottom: 20px;">SISTEMA V22.7</h1>
-        <button class="choice-btn" onclick="init('medico')">💻 DASHBOARD MÉDICO</button>
-        <button class="choice-btn" style="border-color:var(--green); color:var(--green)" onclick="init('tv')">📺 TELA DA RECEPÇÃO</button>
-        <button class="choice-btn" style="border-color:var(--orange); color:var(--orange)" onclick="init('tablet')">📱 TABLET DE COBRANÇA</button>
-    </div>
-
-    <div id="doctor-area" class="hidden">
-        <div style="display:flex; justify-content: space-between; align-items: flex-start;">
-            <select id="localSelect" style="width: auto; margin:0;" onchange="updateLocal()">
-                <option>CEMIR LAPÃO</option>
-                <option>CEMIR AMÉRICA DOURADA</option>
-                <option>CEMIR CANARANA</option>
-                <option>DILAB BARRA DO MENDES</option>
-            </select>
-            <div style="text-align: right;">
-                <div id="totalDia" style="background:var(--green); color:#064e3b; padding:8px 20px; border-radius:20px; font-weight:bold; font-size: 1.2rem;">Total: R$ 0,00</div>
-                <button class="btn btn-red" onclick="zerarCaixa()">⚠️ ZERAR CAIXA DO DIA</button>
-            </div>
-        </div>
-        
-        <div class="dashboard-grid">
-            <div class="panel">
-                <h4 style="margin:0 0 10px 0; color:var(--muted)">CHAMADA TV</h4>
-                <input type="text" id="pName" placeholder="Nome do Paciente">
-                <button class="btn btn-outline" onclick="tvChamada()">📢 CHAMAR AGORA</button>
-                <div id="lastCall" style="margin-top:10px; font-size: 0.8rem; color: var(--blue); text-align:center;"></div>
-            </div>
-
-            <div id="central-area">
-                <h2 style="margin-top:0; color:var(--orange)">COBRANÇA PIX</h2>
-                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
-                    <div>
-                        <label style="font-size:0.8rem; color:var(--muted)">VALOR R$</label>
-                        <input type="text" id="pixValue" placeholder="0.00">
-                        <button class="btn btn-blue" style="width:100%" onclick="enviarParaTablet()">📲 ENVIAR TABLET</button>
-                        <button class="btn btn-green" style="width:100%" onclick="confirmarRecebimento()">✅ CONFIRMAR</button>
-                    </div>
-                    <div>
-                        <label style="font-size:0.8rem; color:var(--muted)">CÓDIGO PIX (COLE AQUI)</label>
-                        <textarea id="pixCode" rows="5" placeholder="Cole aqui..." oninput="autoExtrairValor()"></textarea>
-                    </div>
-                </div>
-                <hr style="width:100%; border:0; border-top:1px solid var(--border); margin: 15px 0;">
-                <div style="flex:1; overflow-y:auto;">
-                    <div id="financeLog" style="font-size: 0.85rem;"></div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <h4>AJUSTES TV</h4>
-                <label>VOLUME</label>
-                <input type="range" id="volInp" min="0" max="100" value="30" oninput="setVol(this.value)">
-                <label style="margin-top:15px;">VÍDEOS (LINKS)</label>
-                <input type="text" id="vid1" placeholder="Link 1">
-                <input type="text" id="vid2" placeholder="Link 2">
-                <input type="text" id="vid3" placeholder="Link 3">
-                <button class="btn btn-blue" style="width:100%" onclick="updatePlaylist()">SINCRONIZAR TV</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tablet-area" class="hidden">
-        <div id="idle-msg"><h1>Aguardando...</h1></div>
-        <div id="pay-msg" class="hidden">
-            <h1 id="tabValue" class="tab-val-display">R$ 0,00</h1>
-            <div id="qrcode-container"></div>
-            <p style="color:var(--blue); font-size:1.5rem">Pague com PIX</p>
-        </div>
-        <div id="success-msg" class="hidden"><div style="font-size: 10rem;">✅</div><h1>PAGO!</h1></div>
-    </div>
-
-    <div id="tv-area" class="hidden">
-        <div id="player" style="width:100%; height:100%"></div>
-        <div class="tv-sidebar">
-            <h2>CHAMADA</h2>
-            <h1 id="tvName" style="font-size: 4vw; text-transform: uppercase;">...</h1>
-            <h3 style="color:var(--purple)">SALA DE ULTRASSONOGRAFIA</h3>
-        </div>
-        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; border:none; z-index:9999;">INICIAR TV</button>
-    </div>
-
 <script>
     const firebaseConfig = { databaseURL: "https://painelclinica-default-rtdb.firebaseio.com/" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -144,7 +11,11 @@
             document.getElementById('doctor-area').classList.remove('hidden');
             db.ref('financeiro/total').on('value', s => { totalAcumulado = s.val() || 0; atualizarDisplayTotal(); });
             db.ref('config/links_raw').once('value', s => {
-                const l = s.val(); if(l) { document.getElementById('vid1').value = l.v1||''; document.getElementById('vid2').value = l.v2||''; document.getElementById('vid3').value = l.v3||''; }
+                const l = s.val(); if(l) { 
+                    document.getElementById('vid1').value = l.v1||''; 
+                    document.getElementById('vid2').value = l.v2||''; 
+                    document.getElementById('vid3').value = l.v3||''; 
+                }
             });
         } else if (m === 'tablet') {
             document.getElementById('tablet-area').classList.remove('hidden');
@@ -155,17 +26,14 @@
         }
     }
 
-    // EXTRAÇÃO AUTOMÁTICA (TRATA ESTÁTICO E DINÂMICO)
+    // EXTRAÇÃO AUTOMÁTICA
     function autoExtrairValor() {
         const codigo = document.getElementById('pixCode').value;
         const match = codigo.match(/54\d{2}(\d+\.\d{2})/);
-        if (match && match[1]) {
-            document.getElementById('pixValue').value = match[1];
-        } else {
-            console.log("PIX Dinâmico: Valor precisa ser manual.");
-        }
+        if (match && match[1]) document.getElementById('pixValue').value = match[1];
     }
 
+    // MÉDICO
     function enviarParaTablet() {
         const valor = document.getElementById('pixValue').value || "Manual";
         const codigo = document.getElementById('pixCode').value;
@@ -175,7 +43,7 @@
 
     function confirmarRecebimento() {
         const valor = parseFloat(document.getElementById('pixValue').value);
-        if(isNaN(valor)) return alert("Digite o valor para somar ao caixa.");
+        if(isNaN(valor)) return alert("Digite o valor para somar.");
         db.ref('cobranca/status').set('pago');
         totalAcumulado += valor;
         db.ref('financeiro/total').set(totalAcumulado);
@@ -185,6 +53,7 @@
 
     function zerarCaixa() { if(confirm("Zerar caixa?")) db.ref('financeiro/total').set(0); }
     function atualizarDisplayTotal() { document.getElementById('totalDia').innerText = `Total: R$ ${totalAcumulado.toFixed(2).replace('.',',')}`; }
+    
     function tvChamada() { 
         const n = document.getElementById('pName').value;
         if(n) db.ref('chamada').set({ nome: n.toUpperCase(), t: Date.now() });
@@ -192,17 +61,18 @@
     }
 
     function updatePlaylist() {
-        const v1 = document.getElementById('vid1').value, v2 = document.getElementById('vid2').value, v3 = document.getElementById('vid3').value;
         const extract = (url) => {
             var m = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
             return (m && m[7].length == 11) ? m[7] : false;
         };
+        const v1 = document.getElementById('vid1').value, v2 = document.getElementById('vid2').value, v3 = document.getElementById('vid3').value;
         const ids = [extract(v1), extract(v2), extract(v3)].filter(i => i !== false);
         db.ref('config/links_raw').set({v1, v2, v3});
         db.ref('config/playlist').set(ids);
-        alert("Playlist Atualizada!");
+        alert("Playlist Sincronizada!");
     }
 
+    // TABLET - GERAÇÃO DO QR CODE CORRIGIDA
     function ouvirCobrancas() {
         db.ref('cobranca').on('value', s => {
             const d = s.val(); if(!d) return;
@@ -210,17 +80,35 @@
                 document.getElementById('idle-msg').classList.add('hidden');
                 document.getElementById('success-msg').classList.add('hidden');
                 document.getElementById('pay-msg').classList.remove('hidden');
-                document.getElementById('tabValue').innerText = `R$ ${d.valor}`;
+                document.getElementById('tabValue').innerText = `R$ ${d.valor.toString().replace('.',',')}`;
+                
                 const container = document.getElementById('qrcode-container');
-                container.innerHTML = ''; new QRCode(container, { text: d.codigo, width: 350, height: 350 });
+                container.innerHTML = ''; // Limpa o "branco"
+                
+                // Pequeno delay para garantir que o contêiner está limpo antes de gerar
+                setTimeout(() => {
+                    new QRCode(container, {
+                        text: d.codigo,
+                        width: 320,
+                        height: 320,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.M // Nível de erro médio para códigos longos
+                    });
+                }, 100);
+
             } else if (d.status === 'pago') {
                 document.getElementById('pay-msg').classList.add('hidden');
                 document.getElementById('success-msg').classList.remove('hidden');
-                setTimeout(() => { document.getElementById('success-msg').classList.add('hidden'); document.getElementById('idle-msg').classList.remove('hidden'); }, 4000);
+                setTimeout(() => { 
+                    document.getElementById('success-msg').classList.add('hidden'); 
+                    document.getElementById('idle-msg').classList.remove('hidden'); 
+                }, 4000);
             }
         });
     }
 
+    // TV
     function initTV() {
         var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
         document.body.appendChild(tag);
@@ -230,10 +118,10 @@
             const d = s.val();
             if(d && (Date.now() - d.t < 10000)) {
                 document.getElementById('tvName').innerText = d.nome;
-                if(player) player.setVolume(5); // ABAIXA SOM
+                if(player) player.setVolume(5);
                 const ut = new SpeechSynthesisUtterance(`Paciente ${d.nome}, Sala de ultrassonografia. Por gentileza, paciente ${d.nome}, queira se dirigir à sala de ultrassonografia.`);
                 ut.lang = 'pt-BR';
-                ut.onend = () => { if(player) player.setVolume(volumeOriginal); }; // VOLTA SOM
+                ut.onend = () => { if(player) player.setVolume(volumeOriginal); };
                 window.speechSynthesis.speak(ut);
             }
         });
@@ -257,5 +145,3 @@
     }
     function updateLocal() { localStorage.setItem('locV21', document.getElementById('localSelect').value); }
 </script>
-</body>
-</html>
