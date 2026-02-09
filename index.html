@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA V23.6 - DR. RODRIGO</title>
+    <title>SISTEMA V24.0 - DR. RODRIGO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -12,28 +12,20 @@
             --blue: #38bdf8; --green: #4ade80; --orange: #fb923c; --border: #334155; 
         }
         body, html { margin: 0; padding: 0; min-height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
-        
         .hidden { display: none !important; }
-
-        /* TELA DE SELEÇÃO INICIAL */
         #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 15px; }
-
-        /* DASHBOARD MÉDICO */
         #doctor-area { padding: 20px; box-sizing: border-box; }
         .dashboard-grid { display: grid; grid-template-columns: 320px 1fr 320px; gap: 20px; margin-top: 20px; }
         .panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; }
-        
-        input, textarea { background: #0f172a; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; width: 100%; box-sizing: border-box; font-size: 1rem; }
-        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 8px; }
+        input, textarea, select { background: #0f172a; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; width: 100%; box-sizing: border-box; font-size: 1rem; }
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 8px; transition: 0.2s; }
         .btn-blue { background: var(--blue); color: #0c4a6e; }
         .btn-green { background: var(--green); color: #064e3b; }
+        .btn-price { background: #334155; color: white; font-size: 0.8rem; padding: 10px; margin-bottom: 5px; border: 1px solid var(--blue); }
+        .btn-price:hover { background: var(--blue); color: #0f172a; }
         .btn-red { background: #f87171; color: white; font-size: 0.8rem; }
-
-        /* TABLET */
         #tablet-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
         #qrcode-container { padding: 25px; background: white; border-radius: 20px; margin: 20px auto; display: inline-block; }
-
-        /* TV */
         #tv-area { display: grid; grid-template-columns: 65% 35%; height: 100vh; background: #000; }
         .tv-sidebar { background: var(--bg); border-left: 4px solid var(--blue); padding: 40px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
     </style>
@@ -41,7 +33,7 @@
 <body>
 
     <div id="setup-area">
-        <h1 style="letter-spacing: 5px; color: var(--blue);">SISTEMA V23.6</h1>
+        <h1 style="letter-spacing: 5px; color: var(--blue);">SISTEMA V24.0</h1>
         <button class="btn btn-blue" style="width:350px" onclick="init('medico')">💻 DASHBOARD DO MÉDICO</button>
         <button class="btn btn-green" style="width:350px" onclick="init('tv')">📺 TELA DA RECEPÇÃO</button>
         <button class="btn btn-blue" style="width:350px; background: var(--orange);" onclick="init('tablet')">📱 TABLET DE COBRANÇA</button>
@@ -50,9 +42,14 @@
     <div id="medico-area" class="hidden">
         <div id="doctor-area">
             <div style="display:flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
-                <h2 style="margin:0; color:var(--blue);">DR. RODRIGO</h2>
+                <select id="localSelect" style="width: auto; margin:0;" onchange="updatePrecos()">
+                    <option value="LAPAO">CEMIR LAPÃO</option>
+                    <option value="AMERICA">CEMIR AMÉRICA DOURADA</option>
+                    <option value="CANARANA">CEMIR CANARANA</option>
+                    <option value="BARRA">DILAB BARRA DO MENDES</option>
+                </select>
                 <div style="text-align: right;">
-                    <div id="totalDia" style="background:var(--green); color:#064e3b; padding:8px 25px; border-radius:30px; font-weight:bold; font-size: 1.4rem;">Total: R$ 0,00</div>
+                    <div id="totalDia" style="background:var(--green); color:#064e3b; padding:8px 25px; border-radius:20px; font-weight:bold; font-size: 1.4rem;">Total: R$ 0,00</div>
                     <button class="btn btn-red" style="width:auto; margin-top:5px; padding: 5px 15px;" onclick="zerarCaixa()">ZERAR DIA</button>
                 </div>
             </div>
@@ -66,11 +63,16 @@
 
                 <div class="panel" style="border-color: var(--orange);">
                     <h3 style="color:var(--orange)">💳 PIX / COBRANÇA</h3>
+                    <label>Selecione o Exame:</label>
+                    <div style="display:flex; gap:10px;">
+                        <button id="btnNormal" class="btn btn-price" onclick="setPreco('normal')">NORMAL: R$ 220</button>
+                        <button id="btnDoppler" class="btn btn-price" onclick="setPreco('doppler')">DOPPLER: R$ 280</button>
+                    </div>
                     <input type="text" id="pixValue" placeholder="VALOR R$">
                     <textarea id="pixCode" rows="4" placeholder="COLE O CÓDIGO AQUI" oninput="autoExtrairValor()"></textarea>
                     <button class="btn btn-blue" onclick="enviarParaTablet()">ENVIAR TABLET</button>
                     <button class="btn btn-green" onclick="confirmarRecebimento()">CONFIRMAR PAGO</button>
-                    <div id="financeLog" style="margin-top:10px; font-size:0.8rem; max-height: 100px; overflow-y:auto;"></div>
+                    <div id="financeLog" style="margin-top:10px; font-size:0.8rem; max-height: 80px; overflow-y:auto;"></div>
                 </div>
 
                 <div class="panel">
@@ -100,7 +102,7 @@
         <div id="player" style="width:100%; height:100%"></div>
         <div class="tv-sidebar">
             <h1 id="tvName" style="font-size: 5vw; text-transform: uppercase;">...</h1>
-            <h3 style="color:var(--purple)">SALA DE ULTRASSONOGRAFIA</h3>
+            <h3>SALA DE ULTRASSONOGRAFIA</h3>
         </div>
         <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; color:white;">🔊 CLIQUE PARA INICIAR TV 🔊</button>
     </div>
@@ -112,10 +114,30 @@
 
     let player, totalAcumulado = 0, volumeOriginal = 30;
 
+    // Configuração de Preços por Unidade
+    const tabelaPrecos = {
+        BARRA: { normal: 210, doppler: 270 },
+        PADRAO: { normal: 220, doppler: 280 }
+    };
+
+    function updatePrecos() {
+        const local = document.getElementById('localSelect').value;
+        const precos = local === 'BARRA' ? tabelaPrecos.BARRA : tabelaPrecos.PADRAO;
+        document.getElementById('btnNormal').innerText = `NORMAL: R$ ${precos.normal}`;
+        document.getElementById('btnDoppler').innerText = `DOPPLER: R$ ${precos.doppler}`;
+    }
+
+    function setPreco(tipo) {
+        const local = document.getElementById('localSelect').value;
+        const precos = local === 'BARRA' ? tabelaPrecos.BARRA : tabelaPrecos.PADRAO;
+        document.getElementById('pixValue').value = (tipo === 'normal' ? precos.normal : precos.doppler).toFixed(2);
+    }
+
     function init(m) {
         document.getElementById('setup-area').classList.add('hidden');
-        document.getElementById(m + '-area').classList.remove('hidden'); // Corrigido: agora mostra o ID certo
+        document.getElementById(m + '-area').classList.remove('hidden');
         if (m === 'medico') {
+            updatePrecos();
             db.ref('financeiro/total').on('value', s => { totalAcumulado = s.val() || 0; atualizarDisplayTotal(); });
             db.ref('config/links_raw').once('value', s => { 
                 const l = s.val(); if(l){ document.getElementById('vid1').value=l.v1||''; document.getElementById('vid2').value=l.v2||''; }
@@ -174,8 +196,9 @@
             const d = s.val(); if(!d) return;
             if(d.status === 'pendente') {
                 document.getElementById('idle-msg').classList.add('hidden');
+                document.getElementById('success-msg').classList.add('hidden');
                 document.getElementById('pay-msg').classList.remove('hidden');
-                document.getElementById('tabValue').innerText = `R$ ${d.valor}`;
+                document.getElementById('tabValue').innerText = `R$ ${d.valor.toString().replace('.',',')}`;
                 const container = document.getElementById('qrcode-container');
                 container.innerHTML = '';
                 setTimeout(() => { new QRCode(container, { text: d.codigo, width: 350, height: 350, correctLevel: QRCode.CorrectLevel.L }); }, 50);
@@ -202,7 +225,7 @@
             }
         });
         db.ref('config/playlist').on('value', s => { if(player && s.val()) player.loadPlaylist(s.val().ids); });
-        db.ref('config/volume').on('value', v => { volumeOriginal = v.val()||30; if(player) player.setVolume(volumeOriginal); });
+        db.ref('config/volume').on('value', v => { volumeOriginal = v.val()||30; if(player && player.setVolume) player.setVolume(volumeOriginal); });
     }
 
     function onYouTubeIframeAPIReady() {
