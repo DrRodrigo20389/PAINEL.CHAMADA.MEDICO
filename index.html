@@ -2,75 +2,123 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA V23.4 - DR. RODRIGO</title>
+    <title>SISTEMA V23.5 - DR. RODRIGO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --blue: #38bdf8; --green: #4ade80; --border: #334155; }
+        :root { 
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; 
+            --blue: #38bdf8; --green: #4ade80; --orange: #fb923c; --border: #334155; 
+        }
         body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
         .hidden { display: none !important; }
-        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
-        input, textarea { background: #0f172a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; width: 100%; }
-        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        
+        /* DASHBOARD MÉDICO */
+        #doctor-area { display: flex; flex-direction: column; height: 100vh; padding: 20px; box-sizing: border-box; gap: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: 320px 1fr 320px; gap: 20px; flex: 1; overflow: hidden; }
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        
+        input, textarea { background: #0f172a; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; width: 100%; box-sizing: border-box; font-size: 1rem; }
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; margin-bottom: 8px; }
         .btn-blue { background: var(--blue); color: #0c4a6e; }
         .btn-green { background: var(--green); color: #064e3b; }
+        .btn-red { background: #f87171; color: white; font-size: 0.8rem; }
+        .btn-outline { background: transparent; border: 2px solid var(--green); color: var(--green); }
+
+        /* TABLET DARK */
+        #tablet-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg); text-align: center; }
+        #qrcode-container { padding: 25px; background: white; border-radius: 20px; margin: 20px auto; }
+        .tab-val { font-size: 6rem; font-weight: 900; color: var(--green); margin: 0; }
+
+        /* TV */
         #tv-area { display: grid; grid-template-columns: 65% 35%; height: 100vh; background: #000; }
         .tv-sidebar { background: var(--bg); border-left: 4px solid var(--blue); padding: 40px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        
+        #setup-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 15px; }
     </style>
 </head>
 <body>
 
-    <div id="setup-area" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:10px;">
-        <button class="btn btn-blue" style="width:300px" onclick="init('medico')">DASHBOARD MÉDICO</button>
-        <button class="btn btn-green" style="width:300px" onclick="init('tv')">TELA RECEPÇÃO</button>
-        <button class="btn btn-blue" style="width:300px; background:#fb923c" onclick="init('tablet')">TABLET COBRANÇA</button>
+    <div id="setup-area">
+        <h1 style="letter-spacing: 5px; color: var(--blue);">SISTEMA MÉDICO V23.5</h1>
+        <button class="btn btn-blue" style="width:350px" onclick="init('medico')">💻 DASHBOARD DO MÉDICO</button>
+        <button class="btn btn-green" style="width:350px" onclick="init('tv')">📺 TELA DA RECEPÇÃO</button>
+        <button class="btn btn-blue" style="width:350px; background: var(--orange);" onclick="init('tablet')">📱 TABLET DE COBRANÇA</button>
     </div>
 
-    <div id="doctor-area" class="hidden" style="padding:20px;">
-        <div style="display:flex; justify-content: space-between; margin-bottom:10px;">
-            <h3 style="color:var(--blue)">SISTEMA DR. RODRIGO</h3>
-            <div id="totalDia" style="background:var(--green); color:#064e3b; padding:8px 20px; border-radius:20px; font-weight:bold;">Total: R$ 0,00</div>
+    <div id="doctor-area" class="hidden">
+        <div style="display:flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+            <h2 style="margin:0; color:var(--blue);">DR. RODRIGO | Ultrassonografia</h2>
+            <div style="text-align: right;">
+                <div id="totalDia" style="background:var(--green); color:#064e3b; padding:8px 25px; border-radius:30px; font-weight:bold; font-size: 1.4rem;">Total: R$ 0,00</div>
+                <button class="btn btn-red" style="width:auto; margin-top:5px;" onclick="zerarCaixa()">ZERAR DIA</button>
+            </div>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+
+        <div class="dashboard-grid">
             <div class="panel">
-                <h4>📢 CHAMADA</h4>
-                <input type="text" id="pName" placeholder="Nome do Paciente">
+                <h3 style="color:var(--blue); border-bottom: 1px solid var(--border); padding-bottom: 10px;">📢 CHAMADA TV</h3>
+                <label>Nome do Paciente:</label>
+                <input type="text" id="pName" placeholder="Ex: João Silva">
                 <button class="btn btn-blue" onclick="tvChamada()">CHAMAR AGORA</button>
+                <div id="lastCall" style="margin-top:20px; font-size: 0.9rem; color: var(--muted); text-align: center;"></div>
             </div>
-            <div class="panel">
-                <h4 style="color:#fb923c">💳 PIX / COBRANÇA</h4>
-                <input type="text" id="pixValue" placeholder="VALOR R$">
-                <textarea id="pixCode" rows="3" placeholder="COLE O CÓDIGO AQUI"></textarea>
-                <button class="btn btn-blue" onclick="enviarParaTablet()">ENVIAR TABLET</button>
-                <button class="btn btn-green" style="margin-top:5px" onclick="confirmarRecebimento()">CONFIRMAR PAGO</button>
+
+            <div class="panel" style="border-color: var(--orange);">
+                <h3 style="color:var(--orange); border-bottom: 1px solid var(--border); padding-bottom: 10px;">💳 COBRANÇA PIX</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label>VALOR R$:</label>
+                        <input type="text" id="pixValue" placeholder="0.00">
+                        <button class="btn btn-blue" onclick="enviarParaTablet()">ENVIAR TABLET</button>
+                        <button class="btn btn-green" onclick="confirmarRecebimento()">CONFIRMAR PAGO</button>
+                    </div>
+                    <div>
+                        <label>CÓDIGO PIX (Statsails/Fitbank):</label>
+                        <textarea id="pixCode" rows="6" placeholder="Cole o código completo aqui..." oninput="autoExtrairValor()"></textarea>
+                    </div>
+                </div>
+                <h4 style="margin-top:20px; color: var(--muted);">HISTÓRICO RECENTE:</h4>
+                <div id="financeLog" style="flex:1; overflow-y:auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;"></div>
             </div>
+
             <div class="panel">
-                <h4>📺 AJUSTES TV</h4>
-                <input type="text" id="vid1" placeholder="Link YouTube 1">
-                <input type="text" id="vid2" placeholder="Link YouTube 2">
-                <button class="btn btn-blue" onclick="updatePlaylist()">SINCRONIZAR VÍDEOS</button>
-                <label>VOLUME</label>
+                <h3 style="color:var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 10px;">⚙️ AJUSTES TV</h3>
+                <label>VOLUME DA RECEPÇÃO:</label>
                 <input type="range" id="volInp" min="0" max="100" value="30" oninput="setVol(this.value)">
+                
+                <label style="margin-top:15px;">PLAYLIST DO YOUTUBE:</label>
+                <input type="text" id="vid1" placeholder="Link do Vídeo 1">
+                <input type="text" id="vid2" placeholder="Link do Vídeo 2">
+                <button class="btn btn-blue" onclick="updatePlaylist()">SINCRONIZAR VÍDEOS</button>
+                <p style="font-size: 0.7rem; color: var(--muted); margin-top: 10px;">Dica: Cole a URL completa do YouTube e clique em sincronizar.</p>
             </div>
         </div>
     </div>
 
-    <div id="tablet-area" class="hidden" style="height:100vh; text-align:center; display:flex; flex-direction:column; justify-content:center;">
-        <div id="idle-msg"><h1>AGUARDANDO...</h1></div>
+    <div id="tablet-area" class="hidden">
+        <div id="idle-msg"><h1 style="font-size: 3rem; color: var(--muted);">Aguardando Dr. Rodrigo...</h1></div>
         <div id="pay-msg" class="hidden">
-            <h1 id="tabValue" style="font-size:5rem; color:var(--green)">R$ 0,00</h1>
-            <div id="qrcode-container" style="background:white; padding:15px; display:inline-block; border-radius:10px;"></div>
+            <p style="font-size: 2rem; color: var(--muted); margin: 0;">VALOR A PAGAR:</p>
+            <h1 id="tabValue" class="tab-val">R$ 0,00</h1>
+            <div id="qrcode-container"></div>
+            <h2 style="color: var(--blue);">PAGUE COM SEU APLICATIVO PIX</h2>
+        </div>
+        <div id="success-msg" class="hidden">
+            <div style="font-size: 10rem; color: var(--green);">✅</div>
+            <h1 style="color: white; font-size: 3rem;">PAGAMENTO CONFIRMADO</h1>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <div id="player"></div>
+        <div id="player" style="width:100%; height:100%;"></div>
         <div class="tv-sidebar">
-            <h1 id="tvName" style="font-size: 4vw; color:white;">...</h1>
-            <h3>SALA DE ULTRASSONOGRAFIA</h3>
+            <h2 style="color:var(--blue); letter-spacing: 5px;">CHAMADA</h2>
+            <h1 id="tvName" style="font-size: 5vw; color:white; text-transform: uppercase;">...</h1>
+            <h3 style="color:var(--purple); letter-spacing: 2px;">SALA DE ULTRASSONOGRAFIA</h3>
         </div>
-        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); color:white; border:none; z-index:9999; font-size: 2rem; cursor:pointer;">🔊 ATIVAR SOM E VÍDEO 🔊</button>
+        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:white; border:none; z-index:9999; font-size: 2rem; font-weight: bold; cursor: pointer;">🔊 CLIQUE PARA INICIAR SISTEMA DA TV 🔊</button>
     </div>
 
 <script>
@@ -84,44 +132,62 @@
         document.getElementById('setup-area').classList.add('hidden');
         document.getElementById(m + '-area').classList.remove('hidden');
         if (m === 'medico') {
-            db.ref('financeiro/total').on('value', s => { totalAcumulado = s.val() || 0; document.getElementById('totalDia').innerText = `Total: R$ ${totalAcumulado.toFixed(2)}`; });
-            db.ref('config/links_raw').once('value', s => { const l = s.val(); if(l){ document.getElementById('vid1').value=l.v1||''; document.getElementById('vid2').value=l.v2||''; } });
+            db.ref('financeiro/total').on('value', s => { totalAcumulado = s.val() || 0; atualizarDisplayTotal(); });
+            db.ref('config/links_raw').once('value', s => { 
+                const l = s.val(); if(l){ document.getElementById('vid1').value=l.v1||''; document.getElementById('vid2').value=l.v2||''; }
+            });
         } else if (m === 'tablet') ouvirCobrancas();
         else if (m === 'tv') initTV();
     }
 
-    function updatePlaylist() {
-        const v1 = document.getElementById('vid1').value;
-        const v2 = document.getElementById('vid2').value;
-        const extract = (url) => {
-            var m = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-            return (m && m[7].length == 11) ? m[7] : false;
-        };
-        const ids = [extract(v1), extract(v2)].filter(i => i !== false);
-        db.ref('config/links_raw').set({v1, v2});
-        db.ref('config/playlist').set({ids, t: Date.now()}); // t força a atualização
-    }
-
-    function tvChamada() {
-        const n = document.getElementById('pName').value;
-        if(n) db.ref('chamada').set({ nome: n.toUpperCase(), t: Date.now() });
-        document.getElementById('pName').value = '';
+    function autoExtrairValor() {
+        const codigo = document.getElementById('pixCode').value;
+        const match = codigo.match(/54\d{2}(\d+\.\d{2})/);
+        if (match && match[1]) document.getElementById('pixValue').value = match[1];
     }
 
     function enviarParaTablet() {
-        const valor = document.getElementById('pixValue').value || "Manual";
+        const valor = document.getElementById('pixValue').value || "0,00";
         const codigo = document.getElementById('pixCode').value;
+        if(!codigo) return alert("Cole o código PIX!");
         db.ref('cobranca').set({ valor, codigo, status: 'pendente', t: Date.now() });
     }
 
     function confirmarRecebimento() {
-        const valor = parseFloat(document.getElementById('pixValue').value);
-        if(!isNaN(valor)) {
-            db.ref('cobranca/status').set('pago');
-            totalAcumulado += valor;
-            db.ref('financeiro/total').set(totalAcumulado);
-            document.getElementById('pixValue').value = ''; document.getElementById('pixCode').value = '';
+        const valorStr = document.getElementById('pixValue').value;
+        const valor = parseFloat(valorStr);
+        if(isNaN(valor)) return alert("Digite o valor!");
+        db.ref('cobranca/status').set('pago');
+        totalAcumulado += valor;
+        db.ref('financeiro/total').set(totalAcumulado);
+        const log = document.getElementById('financeLog');
+        log.innerHTML = `<div style="padding:8px; border-bottom:1px solid var(--border); color:var(--blue)">R$ ${valor.toFixed(2)} - ${new Date().toLocaleTimeString()}</div>` + log.innerHTML;
+        document.getElementById('pixValue').value = ''; document.getElementById('pixCode').value = '';
+    }
+
+    function zerarCaixa() { if(confirm("Zerar caixa de hoje?")) db.ref('financeiro/total').set(0); }
+    function atualizarDisplayTotal() { document.getElementById('totalDia').innerText = `Total: R$ ${totalAcumulado.toFixed(2).replace('.',',')}`; }
+
+    function tvChamada() {
+        const n = document.getElementById('pName').value;
+        if(n) {
+            db.ref('chamada').set({ nome: n.toUpperCase(), t: Date.now() });
+            document.getElementById('lastCall').innerText = `Último chamado: ${n.toUpperCase()}`;
         }
+        document.getElementById('pName').value = '';
+    }
+
+    function updatePlaylist() {
+        const extract = (url) => {
+            var m = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+            return (m && m[7].length == 11) ? m[7] : false;
+        };
+        const v1 = document.getElementById('vid1').value;
+        const v2 = document.getElementById('vid2').value;
+        const ids = [extract(v1), extract(v2)].filter(i => i !== false);
+        db.ref('config/links_raw').set({v1, v2});
+        db.ref('config/playlist').set({ids, t: Date.now()});
+        alert("Sincronizado com a TV!");
     }
 
     function ouvirCobrancas() {
@@ -129,13 +195,15 @@
             const d = s.val(); if(!d) return;
             if(d.status === 'pendente') {
                 document.getElementById('idle-msg').classList.add('hidden');
+                document.getElementById('success-msg').classList.add('hidden');
                 document.getElementById('pay-msg').classList.remove('hidden');
-                document.getElementById('tabValue').innerText = `R$ ${d.valor}`;
+                document.getElementById('tabValue').innerText = `R$ ${d.valor.toString().replace('.',',')}`;
                 const container = document.getElementById('qrcode-container');
-                container.innerHTML = ''; new QRCode(container, { text: d.codigo, width: 300, height: 300 });
+                container.innerHTML = ''; new QRCode(container, { text: d.codigo, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.L });
             } else if (d.status === 'pago') {
                 document.getElementById('pay-msg').classList.add('hidden');
-                setTimeout(() => document.getElementById('idle-msg').classList.remove('hidden'), 2000);
+                document.getElementById('success-msg').classList.remove('hidden');
+                setTimeout(() => { document.getElementById('success-msg').classList.add('hidden'); document.getElementById('idle-msg').classList.remove('hidden'); }, 4000);
             }
         });
     }
@@ -143,13 +211,11 @@
     function initTV() {
         var tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
         document.body.appendChild(tag);
-        
-        // GATILHO DE CHAMADA COM VOLUME DUCKING
         db.ref('chamada').on('value', s => {
             const d = s.val();
             if(d && (Date.now() - d.t < 10000)) {
                 document.getElementById('tvName').innerText = d.nome;
-                if(player && player.setVolume) player.setVolume(5); 
+                if(player && player.setVolume) player.setVolume(5);
                 const msg = `Paciente ${d.nome}, Sala de ultrassonografia. Por gentileza, paciente ${d.nome}, queira se dirigir à sala de ultrassonografia.`;
                 const ut = new SpeechSynthesisUtterance(msg);
                 ut.lang = 'pt-BR';
@@ -157,15 +223,7 @@
                 window.speechSynthesis.speak(ut);
             }
         });
-
-        // ESCUTAR MUDANÇA DE PLAYLIST
-        db.ref('config/playlist').on('value', s => {
-            const d = s.val();
-            if(player && d && d.ids) {
-                player.loadPlaylist(d.ids);
-            }
-        });
-
+        db.ref('config/playlist').on('value', s => { if(player && s.val()) player.loadPlaylist(s.val().ids); });
         db.ref('config/volume').on('value', v => { volumeOriginal = v.val()||30; if(player && player.setVolume) player.setVolume(volumeOriginal); });
     }
 
@@ -173,23 +231,12 @@
         db.ref('config/playlist').once('value').then(s => {
             const d = s.val();
             const list = (d && d.ids) ? d.ids : ['6mK8shfTegE'];
-            player = new YT.Player('player', {
-                height: '100%', width: '100%',
-                playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1, 'playlist': list.join(',') },
-                events: { 'onReady': (e) => { e.target.playVideo(); } }
-            });
+            player = new YT.Player('player', { height: '100%', width: '100%', playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1, 'playlist': list.join(',') } });
         });
     }
 
     function setVol(v) { db.ref('config/volume').set(parseInt(v)); }
-    function unlockAudio() { 
-        document.getElementById('unlockBtn').style.display='none'; 
-        if(player) {
-            player.unMute();
-            player.setVolume(volumeOriginal);
-            player.playVideo();
-        } 
-    }
+    function unlockAudio() { document.getElementById('unlockBtn').style.display='none'; if(player){ player.unMute(); player.setVolume(volumeOriginal); player.playVideo(); } }
 </script>
 </body>
 </html>
