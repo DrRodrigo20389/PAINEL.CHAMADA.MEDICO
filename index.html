@@ -2,20 +2,19 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA V24.2 - DR. RODRIGO</title>
+    <title>SISTEMA V24.3 - DR. RODRIGO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --blue: #38bdf8; --green: #4ade80; --orange: #fb923c; --border: #334155; }
-        body, html { margin: 0; padding: 0; min-height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        body, html { margin: 0; padding: 0; height: 100vh; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
         .hidden { display: none !important; }
-        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; }
-        input, textarea, select { background: #0f172a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; width: 100%; font-size: 0.9rem; }
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; }
+        input, textarea, select { background: #0f172a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; margin-bottom: 8px; width: 100%; }
         .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-bottom: 5px; }
         .btn-blue { background: var(--blue); color: #0c4a6e; }
         .btn-green { background: var(--green); color: #064e3b; }
-        .btn-price { background: #334155; color: white; font-size: 0.7rem; padding: 8px; margin-bottom: 5px; border: 1px solid var(--blue); }
         #tv-area { display: grid; grid-template-columns: 65% 35%; height: 100vh; background: #000; }
         .tv-sidebar { background: var(--bg); border-left: 4px solid var(--blue); padding: 40px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
     </style>
@@ -23,7 +22,6 @@
 <body>
 
     <div id="setup-area" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; gap:10px;">
-        <h1 style="color:var(--blue)">SISTEMA V24.2</h1>
         <button class="btn btn-blue" style="width:300px" onclick="init('medico')">💻 DASHBOARD MÉDICO</button>
         <button class="btn btn-green" style="width:300px" onclick="init('tv')">📺 TELA RECEPÇÃO</button>
         <button class="btn btn-blue" style="width:300px; background:#fb923c" onclick="init('tablet')">📱 TABLET COBRANÇA</button>
@@ -39,53 +37,49 @@
             </select>
             <div id="totalDia" style="background:var(--green); color:#064e3b; padding:8px 20px; border-radius:20px; font-weight:bold;">Total: R$ 0,00</div>
         </div>
-        
         <div style="display:grid; grid-template-columns: 300px 1fr 300px; gap:15px;">
             <div class="panel">
                 <h4>📢 CHAMADA</h4>
                 <input type="text" id="pName" placeholder="Nome do Paciente">
                 <button class="btn btn-blue" onclick="tvChamada()">CHAMAR AGORA</button>
             </div>
-
             <div class="panel">
-                <h3 style="color:#fb923c; margin-top:0;">💳 PIX / COBRANÇA</h3>
+                <h3 style="color:#fb923c; margin-top:0;">💳 PIX</h3>
                 <div style="display:flex; gap:5px;">
-                    <button id="btnNormal" class="btn btn-price" onclick="setPreco('normal')">NORMAL</button>
-                    <button id="btnDoppler" class="btn btn-price" onclick="setPreco('doppler')">DOPPLER</button>
+                    <button id="btnNormal" class="btn" style="background:#334155; font-size:0.7rem;" onclick="setPreco('normal')">NORMAL</button>
+                    <button id="btnDoppler" class="btn" style="background:#334155; font-size:0.7rem;" onclick="setPreco('doppler')">DOPPLER</button>
                 </div>
                 <input type="text" id="pixValue" placeholder="VALOR R$">
-                <textarea id="pixCode" rows="3" placeholder="COLE O CÓDIGO AQUI"></textarea>
+                <textarea id="pixCode" rows="3" placeholder="COLE O CÓDIGO"></textarea>
                 <button class="btn btn-blue" onclick="enviarParaTablet()">ENVIAR TABLET</button>
                 <button class="btn btn-green" onclick="confirmarRecebimento()">CONFIRMAR PAGO</button>
             </div>
-
             <div class="panel">
-                <h4>📺 CONTROLE DA TV</h4>
-                <label>VÍDEOS (LINK YOUTUBE):</label>
-                <input type="text" id="vid1" placeholder="Link 1">
-                <input type="text" id="vid2" placeholder="Link 2">
-                <button class="btn btn-blue" onclick="updatePlaylist()">SINCRONIZAR VÍDEOS</button>
-                <label style="margin-top:10px;">VOLUME</label>
+                <h4>📺 CONTROLE TV</h4>
+                <input type="text" id="vid1" placeholder="Link YouTube 1">
+                <input type="text" id="vid2" placeholder="Link YouTube 2">
+                <button class="btn btn-blue" onclick="updatePlaylist()">SINCRONIZAR</button>
+                <label>VOLUME</label>
                 <input type="range" id="volInp" min="0" max="100" value="30" oninput="setVol(this.value)">
             </div>
         </div>
     </div>
 
-    <div id="tablet-area" class="hidden" style="background:var(--bg); height:100vh; text-align:center; display:flex; flex-direction:column; justify-content:center;">
+    <div id="tablet-area" class="hidden" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <div id="idle-msg"><h1>AGUARDANDO...</h1></div>
         <div id="pay-msg" class="hidden">
             <h1 id="tabValue" style="font-size:5rem; color:var(--green)">R$ 0,00</h1>
-            <div id="qrcode-container" style="background:white; padding:15px; display:inline-block; border-radius:10px;"></div>
+            <div id="qrcode-container" style="background:white; padding:15px;"></div>
         </div>
     </div>
 
     <div id="tv-area" class="hidden">
-        <div id="player"></div>
+        <div id="player" style="width:100%; height:100%"></div>
         <div class="tv-sidebar">
-            <h1 id="tvName" style="font-size: 4vw; color:white; text-transform:uppercase;">...</h1>
+            <h1 id="tvName" style="font-size: 4vw; color:white;">...</h1>
             <h3>SALA DE ULTRASSONOGRAFIA</h3>
         </div>
-        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); color:white; border:none; z-index:9999; font-size: 2rem;">🔊 CLIQUE PARA INICIAR 🔊</button>
+        <button id="unlockBtn" onclick="unlockAudio()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); color:white; border:none; z-index:9999; font-size: 2rem;">🔊 ATIVAR SOM E VÍDEO 🔊</button>
     </div>
 
 <script>
@@ -176,7 +170,7 @@
             const d = s.val();
             if(d && (Date.now() - d.t < 10000)) {
                 document.getElementById('tvName').innerText = d.nome;
-                if(player) player.setVolume(5);
+                if(player) player.setVolume(2); 
                 const ut = new SpeechSynthesisUtterance(`Paciente ${d.nome}, Sala de ultrassonografia. Por gentileza, paciente ${d.nome}, queira se dirigir à sala de ultrassonografia.`);
                 ut.lang = 'pt-BR';
                 ut.onend = () => player.setVolume(volumeOriginal);
@@ -184,12 +178,18 @@
             }
         });
 
-        // ATUALIZAÇÃO AUTOMÁTICA DE VÍDEO SEM F5
+        // SINCRONIZAÇÃO DE VÍDEO REFORÇADA (SEM MUDO)
         db.ref('config/playlist').on('value', s => {
             const d = s.val();
-            if(player && d && d.ids) {
-                player.loadPlaylist(d.ids);
-                player.playVideo(); // Garante que inicie
+            if(player && d && d.ids && d.ids.length > 0) {
+                // Carrega o primeiro vídeo individualmente para "forçar" o som
+                player.cueVideoById(d.ids[0]); 
+                setTimeout(() => {
+                    player.unMute();
+                    player.setVolume(volumeOriginal);
+                    player.loadPlaylist(d.ids);
+                    player.playVideo();
+                }, 500);
             }
         });
 
@@ -209,10 +209,13 @@
     }
 
     function setVol(v) { db.ref('config/volume').set(parseInt(v)); }
-    function zerarCaixa() { if(confirm("Zerar?")) db.ref('financeiro/total').set(0); }
     function unlockAudio() { 
         document.getElementById('unlockBtn').style.display='none'; 
-        if(player){ player.unMute(); player.setVolume(volumeOriginal); player.playVideo(); } 
+        if(player) {
+            player.unMute();
+            player.setVolume(volumeOriginal);
+            player.playVideo();
+        } 
     }
 </script>
 </body>
